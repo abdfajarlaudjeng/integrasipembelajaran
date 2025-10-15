@@ -462,6 +462,48 @@
             `;
         }
 
+        function showMessage(message, type = 'info') {
+            // Remove existing message if any
+            const existingMessage = document.getElementById('message-toast');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.id = 'message-toast';
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm fade-in`;
+            
+            if (type === 'success') {
+                toast.className += ' bg-green-100 border border-green-400 text-green-700';
+            } else if (type === 'error') {
+                toast.className += ' bg-red-100 border border-red-400 text-red-700';
+            } else {
+                toast.className += ' bg-blue-100 border border-blue-400 text-blue-700';
+            }
+
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
         async function assignToStudents(projectId) {
             const project = currentData.find(p => p.__backendId === projectId);
             if (!project) return;
@@ -472,7 +514,23 @@
             const ids = studentIds.split(',').map(id => id.trim()).filter(id => id);
             if (ids.length === 0) return;
 
+            let successCount = 0;
+            let errorCount = 0;
+
             for (const studentId of ids) {
+                // Check if assignment already exists
+                const existingAssignment = currentData.find(item => 
+                    item.type === 'submission' && 
+                    item.tema === project.tema && 
+                    item.kelas === project.kelas && 
+                    item.siswa_id === studentId
+                );
+
+                if (existingAssignment) {
+                    errorCount++;
+                    continue;
+                }
+
                 const submissionData = {
                     id: `${project.id}_${studentId}_${Date.now()}`,
                     type: 'submission',
@@ -494,42 +552,108 @@
                 };
 
                 try {
-                    await window.dataSdk.create(submissionData);
+                    const result = await window.dataSdk.create(submissionData);
+                    if (result.isOk) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
                 } catch (error) {
                     console.error('Error creating submission:', error);
+                    errorCount++;
                 }
             }
 
-            alert(`Proyek berhasil ditugaskan ke ${ids.length} siswa`);
+            if (successCount > 0) {
+                showMessage(`Proyek berhasil ditugaskan ke ${successCount} siswa`, 'success');
+            }
+            if (errorCount > 0) {
+                showMessage(`${errorCount} penugasan gagal (mungkin sudah ada atau error)`, 'error');
+            }
         }
 
-        async function submitWork(submissionId) {
+        function showSubmissionModal(submissionId) {
             const submission = currentData.find(s => s.__backendId === submissionId);
             if (!submission) return;
 
-            const linkKarya = prompt('Masukkan link karya Anda (Google Drive/YouTube/Canva):', submission.link_karya || '');
-            if (linkKarya === null) return;
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4">Kumpulkan Karya</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Link Karya</label>
+                            <input type="url" id="modal-link-karya" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="https://drive.google.com/... atau https://youtu.be/..." value="${submission.link_karya || ''}">
+                            <p class="text-xs text-gray-500 mt-1">Masukkan link Google Drive, YouTube, atau Canva</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Refleksi Diri</label>
+                            <textarea id="modal-refleksi" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                      placeholder="Tuliskan refleksi Anda tentang proyek ini...">${submission.refleksi_siswa || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="submitWorkData('${submissionId}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md">
+                            Kumpulkan
+                        </button>
+                        <button onclick="closeModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
 
-            const refleksi = prompt('Tuliskan refleksi Anda tentang proyek ini:', submission.refleksi_siswa || '');
-            if (refleksi === null) return;
+        function closeModal() {
+            const modal = document.querySelector('.fixed.inset-0');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function submitWorkData(submissionId) {
+            const submission = currentData.find(s => s.__backendId === submissionId);
+            if (!submission) return;
+
+            const linkKarya = document.getElementById('modal-link-karya').value.trim();
+            const refleksi = document.getElementById('modal-refleksi').value.trim();
+
+            if (!linkKarya) {
+                showMessage('Link karya harus diisi!', 'error');
+                return;
+            }
+
+            if (!refleksi) {
+                showMessage('Refleksi diri harus diisi!', 'error');
+                return;
+            }
 
             const updatedSubmission = {
                 ...submission,
                 link_karya: linkKarya,
                 refleksi_siswa: refleksi,
-                status: linkKarya ? 'Menunggu Penilaian' : 'Belum Dikumpulkan'
+                status: 'Menunggu Penilaian'
             };
 
             try {
                 const result = await window.dataSdk.update(updatedSubmission);
                 if (result.isOk) {
-                    alert('Karya berhasil dikumpulkan!');
+                    closeModal();
+                    showMessage('Karya berhasil dikumpulkan!', 'success');
                 } else {
-                    alert('Gagal mengumpulkan karya. Silakan coba lagi.');
+                    showMessage('Gagal mengumpulkan karya. Silakan coba lagi.', 'error');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan. Silakan coba lagi.');
+                showMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');
             }
+        }
+
+        async function submitWork(submissionId) {
+            showSubmissionModal(submissionId);
         }
 
         function viewSubmissions(projectId) {
@@ -629,6 +753,8 @@
         window.loginStudent = loginStudent;
         window.assignToStudents = assignToStudents;
         window.submitWork = submitWork;
+        window.submitWorkData = submitWorkData;
+        window.closeModal = closeModal;
         window.viewSubmissions = viewSubmissions;
         window.deleteProject = deleteProject;
 
@@ -637,8 +763,33 @@
             
             if (isLoading) return;
             
+            // Check if Data SDK is available
+            if (!window.dataSdk) {
+                showMessage('Sistem belum siap. Silakan refresh halaman.', 'error');
+                return;
+            }
+            
             if (currentData.length >= 999) {
-                alert("Maksimal 999 data telah tercapai. Silakan hapus beberapa data terlebih dahulu.");
+                showMessage("Maksimal 999 data telah tercapai. Silakan hapus beberapa data terlebih dahulu.", 'error');
+                return;
+            }
+
+            // Validate form data
+            const tema = document.getElementById('tema').value.trim();
+            const kelas = document.getElementById('kelas').value.trim();
+            const jadwalMulai = document.getElementById('jadwal-mulai').value;
+            const jadwalSelesai = document.getElementById('jadwal-selesai').value;
+            const kompetensi = document.getElementById('kompetensi').value.trim();
+            const deskripsi = document.getElementById('deskripsi').value.trim();
+            
+            if (!tema || !kelas || !jadwalMulai || !jadwalSelesai || !kompetensi || !deskripsi) {
+                showMessage('Semua field harus diisi!', 'error');
+                return;
+            }
+            
+            // Validate dates
+            if (new Date(jadwalSelesai) <= new Date(jadwalMulai)) {
+                showMessage('Tanggal selesai harus setelah tanggal mulai!', 'error');
                 return;
             }
 
@@ -654,17 +805,26 @@
             // Get selected dimensions
             const selectedDimensions = Array.from(document.querySelectorAll('.dimensi-checkbox:checked'))
                 .map(cb => cb.value);
+            
+            if (selectedDimensions.length === 0) {
+                showMessage('Pilih minimal satu dimensi Profil Pelajar Pancasila!', 'error');
+                isLoading = false;
+                createBtn.disabled = false;
+                createBtnText.textContent = 'Buat Proyek';
+                createBtnSpinner.classList.add('hidden');
+                return;
+            }
 
             const projectData = {
                 id: Date.now().toString(),
                 type: 'project',
-                tema: document.getElementById('tema').value,
-                jadwal_mulai: document.getElementById('jadwal-mulai').value,
-                jadwal_selesai: document.getElementById('jadwal-selesai').value,
-                kompetensi: document.getElementById('kompetensi').value,
+                tema: tema,
+                jadwal_mulai: jadwalMulai,
+                jadwal_selesai: jadwalSelesai,
+                kompetensi: kompetensi,
                 dimensi_p5: selectedDimensions.join(', '),
-                deskripsi: document.getElementById('deskripsi').value,
-                kelas: document.getElementById('kelas').value,
+                deskripsi: deskripsi,
+                kelas: kelas,
                 guru_id: 'teacher',
                 siswa_id: '',
                 link_karya: '',
@@ -680,12 +840,14 @@
                 if (result.isOk) {
                     this.reset();
                     document.querySelectorAll('.dimensi-checkbox').forEach(cb => cb.checked = false);
-                    alert('Proyek berhasil dibuat!');
+                    showMessage('Proyek berhasil dibuat!', 'success');
                 } else {
-                    alert('Gagal membuat proyek. Silakan coba lagi.');
+                    console.error('Create project error:', result.error);
+                    showMessage('Gagal membuat proyek: ' + (result.error?.message || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan. Silakan coba lagi.');
+                console.error('Exception creating project:', error);
+                showMessage('Terjadi kesalahan: ' + error.message, 'error');
             } finally {
                 isLoading = false;
                 createBtn.disabled = false;
@@ -732,5 +894,5 @@
     </script>
    </div>
   </div>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ef211a854a81bf',t:'MTc2MDUyOTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ef6462c6f3fd84',t:'MTc2MDUzMjEwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
