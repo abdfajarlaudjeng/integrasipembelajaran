@@ -400,9 +400,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="systemTitle">Sistem Pembelajaran Terintegrasi</h1>
-            <h1 id="systemTitle">SMPN 10 BANAWA SELATAN</h1>
-            <p id="schoolInfo">Informatika & Pendidikan Agama Islam - <span id="semesterInfo">Semester 1 - 2025/2026</span></p>
+            <h1 id="systemTitle">🎓 Sistem Pembelajaran Terintegrasi P5</h1>
+            <p id="schoolInfo">Informatika & Pendidikan Agama Islam - <span id="semesterInfo">Semester 1 - 2024/2025</span></p>
         </div>
         
         <div class="nav-tabs">
@@ -483,6 +482,9 @@
         <div id="proyek" class="tab-content">
             <div class="card">
                 <h2>📋 Proyek P5</h2>
+                <div class="alert alert-info" style="margin-bottom: 15px;">
+                    🔗 Data diambil dari Sheet: <strong>ProyekP5</strong> di <a href="https://docs.google.com/spreadsheets/d/1Uh26h21wlUa-1IezkHRSx8Uh5WZcCpElqWWT_Oqdhmg/edit" target="_blank" rel="noopener noreferrer">Google Sheets</a>
+                </div>
                 <button class="btn btn-success" onclick="loadProyekData()">🔄 Muat Data Proyek</button>
                 <div id="proyekTableContainer">
                     <div class="loading">Klik tombol "Muat Data Proyek" untuk memuat data dari Google Sheets</div>
@@ -562,6 +564,9 @@
         <div id="materi" class="tab-content">
             <div class="card">
                 <h2>📚 Materi Pembelajaran</h2>
+                <div class="alert alert-info" style="margin-bottom: 15px;">
+                    🔗 Data diambil dari Sheet: <strong>Materi</strong> di <a href="https://docs.google.com/spreadsheets/d/1Uh26h21wlUa-1IezkHRSx8Uh5WZcCpElqWWT_Oqdhmg/edit" target="_blank" rel="noopener noreferrer">Google Sheets</a>
+                </div>
                 <button class="btn btn-success" onclick="loadMateriData()">🔄 Muat Data Materi</button>
                 <div id="materiContainer">
                     <div class="loading">Klik tombol "Muat Data Materi" untuk memuat materi dari Google Sheets</div>
@@ -589,20 +594,25 @@
         // Google Sheets configuration
         const SHEET_ID = '1Uh26h21wlUa-1IezkHRSx8Uh5WZcCpElqWWT_Oqdhmg';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
+        const LKPD_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Uh26h21wlUa-1IezkHRSx8Uh5WZcCpElqWWT_Oqdhmg/edit?gid=85781051#gid=85781051';
 
         // Fetch data from Google Sheets
         async function fetchSheetData(sheetName) {
             try {
+                console.log(`Fetching data from sheet: ${sheetName}`);
                 const response = await fetch(SHEET_URL + encodeURIComponent(sheetName));
                 const text = await response.text();
                 const jsonText = text.substring(47).slice(0, -2);
                 const data = JSON.parse(jsonText);
                 
                 if (!data.table || !data.table.rows) {
+                    console.log(`No data found in sheet: ${sheetName}`);
                     return [];
                 }
                 
                 const headers = data.table.cols.map(col => col.label || '');
+                console.log(`Headers found in ${sheetName}:`, headers);
+                
                 const rows = data.table.rows.map(row => {
                     const rowData = {};
                     row.c.forEach((cell, index) => {
@@ -614,7 +624,9 @@
                     return rowData;
                 });
                 
-                return rows.filter(row => Object.values(row).some(val => val !== ''));
+                const filteredRows = rows.filter(row => Object.values(row).some(val => val !== ''));
+                console.log(`Found ${filteredRows.length} rows in ${sheetName}`);
+                return filteredRows;
             } catch (error) {
                 console.error(`Error fetching ${sheetName}:`, error);
                 return [];
@@ -651,28 +663,29 @@
                 
                 return {
                     Timestamp: lkpd.timestamp,
-                    NIS: lkpd.nisn,
-                    Nama: lkpd.nama,
+                    NISN: lkpd.nisn,
+                    'Nama Lengkap': lkpd.nama,
                     Kelas: lkpd.kelas,
-                    JudulProyek: lkpd.judul_proyek,
+                    'Judul Proyek': lkpd.judul_proyek,
                     Kreativitas: kreativitas,
                     Kolaborasi: kolaborasi,
-                    Pemecahan: pemecahan,
-                    Etika: etika,
-                    NilaiAkhir: nilaiAkhir,
-                    CatatanGuru: `Penilaian otomatis berdasarkan LKPD yang disubmit. Siswa menunjukkan pemahaman yang baik dalam mengintegrasikan teknologi dengan nilai-nilai Islam.`
+                    'Pemecahan Masalah': pemecahan,
+                    'Etika Digital': etika,
+                    'Nilai Akhir': nilaiAkhir,
+                    'Catatan Guru': `Penilaian otomatis berdasarkan LKPD yang disubmit pada ${new Date(lkpd.timestamp).toLocaleDateString('id-ID')}. Siswa menunjukkan pemahaman yang baik dalam mengintegrasikan teknologi dengan nilai-nilai Islam.`
                 };
             });
             
             // Update nilai data with new assessments
-            const existingNIS = nilaiData.map(n => n.NIS);
+            const existingNISN = nilaiData.map(n => n.NISN);
             const filteredNewAssessments = newAssessments.filter(assessment => 
-                !existingNIS.includes(assessment.NIS)
+                !existingNISN.includes(assessment.NISN)
             );
             
             if (filteredNewAssessments.length > 0) {
                 nilaiData = [...nilaiData, ...filteredNewAssessments];
                 displayNilaiData();
+                console.log(`Generated ${filteredNewAssessments.length} new assessments from LKPD submissions`);
             }
         }
 
@@ -840,35 +853,59 @@
             const container = document.getElementById('materiContainer');
             
             if (materiData.length === 0) {
-                container.innerHTML = '<div class="loading">Tidak ada data materi</div>';
+                container.innerHTML = '<div class="loading">Tidak ada data materi dari Sheet "Materi"</div>';
                 return;
             }
+
+            console.log('Displaying materi data:', materiData);
+
+            // Filter materi informatika dan PAI
+            const materiInformatika = materiData.filter(materi => 
+                materi['Materi Informatika'] && materi['Materi Informatika'].trim() !== ''
+            );
+            
+            const materiPAI = materiData.filter(materi => 
+                materi['Materi Pendidikan Agama Islam'] && materi['Materi Pendidikan Agama Islam'].trim() !== ''
+            );
 
             const materiHTML = `
                 <div class="grid grid-2">
                     <div class="materi-card">
                         <h3>💻 Materi Informatika</h3>
                         <div class="materi-content">
-                            ${materiData.map(materi => 
-                                materi['Materi Informatika'] ? 
-                                `<div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
-                                    ${materi['Materi Informatika'].replace(/\n/g, '<br>')}
-                                </div>` : ''
-                            ).join('')}
+                            ${materiInformatika.length > 0 ? 
+                                materiInformatika.map(materi => 
+                                    `<div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; border-left: 4px solid #4299e1;">
+                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi:</div>
+                                        <div style="line-height: 1.6;">${materi['Materi Informatika'].replace(/\n/g, '<br>')}</div>
+                                    </div>`
+                                ).join('') : 
+                                '<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">Tidak ada materi informatika tersedia</div>'
+                            }
                         </div>
                     </div>
                     
                     <div class="materi-card">
                         <h3>🕌 Materi Pendidikan Agama Islam</h3>
                         <div class="materi-content">
-                            ${materiData.map(materi => 
-                                materi['Materi Pendidikan Agama Islam'] ? 
-                                `<div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
-                                    ${materi['Materi Pendidikan Agama Islam'].replace(/\n/g, '<br>')}
-                                </div>` : ''
-                            ).join('')}
+                            ${materiPAI.length > 0 ? 
+                                materiPAI.map(materi => 
+                                    `<div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; border-left: 4px solid #48bb78;">
+                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi:</div>
+                                        <div style="line-height: 1.6;">${materi['Materi Pendidikan Agama Islam'].replace(/\n/g, '<br>')}</div>
+                                    </div>`
+                                ).join('') : 
+                                '<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">Tidak ada materi PAI tersedia</div>'
+                            }
                         </div>
                     </div>
+                </div>
+                
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    📊 <strong>Statistik Materi:</strong><br>
+                    • Materi Informatika: ${materiInformatika.length} item<br>
+                    • Materi Pendidikan Agama Islam: ${materiPAI.length} item<br>
+                    • Total: ${materiData.length} baris data dari Sheet "Materi"
                 </div>
             `;
             
@@ -993,23 +1030,27 @@
             const container = document.getElementById('nilaiTableContainer');
             
             if (nilaiData.length === 0) {
-                container.innerHTML = '<div class="loading">Tidak ada data nilai</div>';
+                container.innerHTML = '<div class="loading">Tidak ada data nilai. Data akan otomatis dibuat ketika siswa mengisi LKPD.</div>';
                 return;
             }
 
             const tableHTML = `
+                <div class="alert alert-success" style="margin-bottom: 20px;">
+                    📊 <strong>Data Penilaian Otomatis:</strong> ${nilaiData.length} siswa telah dinilai berdasarkan pengisian LKPD<br>
+                    🔄 Penilaian dibuat otomatis menggunakan kolom: NISN, Nama Lengkap, Kelas, Judul Proyek dari data LKPD
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Timestamp</th>
-                            <th>NIS</th>
-                            <th>Nama</th>
+                            <th>NISN</th>
+                            <th>Nama Lengkap</th>
                             <th>Kelas</th>
                             <th>Judul Proyek</th>
                             <th>Kreativitas</th>
                             <th>Kolaborasi</th>
-                            <th>Pemecahan</th>
-                            <th>Etika</th>
+                            <th>Pemecahan Masalah</th>
+                            <th>Etika Digital</th>
                             <th>Nilai Akhir</th>
                             <th>Catatan Guru</th>
                         </tr>
@@ -1017,21 +1058,29 @@
                     <tbody>
                         ${nilaiData.map(nilai => `
                             <tr>
-                                <td>${nilai.Timestamp || ''}</td>
-                                <td>${nilai.NIS || ''}</td>
-                                <td>${nilai.Nama || ''}</td>
+                                <td>${new Date(nilai.Timestamp).toLocaleDateString('id-ID') || ''}</td>
+                                <td><strong>${nilai.NISN || ''}</strong></td>
+                                <td>${nilai['Nama Lengkap'] || ''}</td>
                                 <td>${nilai.Kelas || ''}</td>
-                                <td>${nilai.JudulProyek || ''}</td>
-                                <td>${nilai.Kreativitas || ''}</td>
-                                <td>${nilai.Kolaborasi || ''}</td>
-                                <td>${nilai.Pemecahan || ''}</td>
-                                <td>${nilai.Etika || ''}</td>
-                                <td><strong>${nilai.NilaiAkhir || ''}</strong></td>
-                                <td>${nilai.CatatanGuru || ''}</td>
+                                <td style="max-width: 200px; word-wrap: break-word;">${nilai['Judul Proyek'] || ''}</td>
+                                <td><span style="color: #4299e1; font-weight: bold;">${nilai.Kreativitas || ''}</span></td>
+                                <td><span style="color: #48bb78; font-weight: bold;">${nilai.Kolaborasi || ''}</span></td>
+                                <td><span style="color: #ed8936; font-weight: bold;">${nilai['Pemecahan Masalah'] || ''}</span></td>
+                                <td><span style="color: #38b2ac; font-weight: bold;">${nilai['Etika Digital'] || ''}</span></td>
+                                <td><strong style="color: #e53e3e; font-size: 1.1em;">${nilai['Nilai Akhir'] || ''}</strong></td>
+                                <td style="max-width: 250px; word-wrap: break-word; font-size: 0.85em;">${nilai['Catatan Guru'] || ''}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+                
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    ℹ️ <strong>Informasi Penilaian:</strong><br>
+                    • Penilaian dibuat otomatis saat siswa mengisi LKPD<br>
+                    • Menggunakan data: NISN, Nama Lengkap, Kelas, Judul Proyek dari form LKPD<br>
+                    • Skor digenerate berdasarkan kualitas jawaban dalam LKPD<br>
+                    • Nilai dapat disesuaikan manual oleh guru jika diperlukan
+                </div>
             `;
             
             container.innerHTML = tableHTML;
@@ -1047,7 +1096,9 @@
 
             const tableHTML = `
                 <div class="alert alert-success" style="margin-bottom: 20px;">
-                    📊 Total LKPD Tersimpan: <strong>${lkpdRecords.length}</strong> data dalam Sheet LKPD_Siswa
+                    📊 Total LKPD Tersimpan: <strong>${lkpdRecords.length}</strong> data dalam Canva Sheet<br>
+                    🔗 Data akan otomatis membuat Sheet LKPD_Siswa di: <a href="${LKPD_SHEET_URL}" target="_blank" rel="noopener noreferrer">Google Sheets (gid=85781051)</a><br>
+                    ✅ Struktur kolom: Timestamp, NISN, Nama, Kelas, Judul Proyek, P1, P2, P3
                 </div>
                 <table class="data-table">
                     <thead>
@@ -1248,5 +1299,5 @@
             }, 1000);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98edf2abe3833f7b',t:'MTc2MDUxNjk1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ee1425e3ae55de',t:'MTc2MDUxODMyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
