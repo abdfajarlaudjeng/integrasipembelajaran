@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Manajemen Proyek P5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        .tab-inactive {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+    </style>
+ </head>
+ <body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+  <div class="min-h-full p-4"><!-- Header -->
+   <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+     <div>
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Sistem Manajemen Proyek P5</h1>
+      <p id="school-name" class="text-lg text-gray-600">Nama Sekolah</p>
+      <p id="semester" class="text-sm text-gray-500">Semester 1 2024/2025</p>
+     </div>
+     <div class="text-right">
+      <div class="bg-blue-100 rounded-lg p-4">
+       <p class="text-sm text-blue-600 font-medium">Total Proyek</p>
+       <p id="total-projects" class="text-2xl font-bold text-blue-800">0</p>
+      </div>
+     </div>
+    </div><!-- Role Tabs -->
+    <div class="flex space-x-2"><button id="teacher-tab" onclick="switchRole('teacher')" class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-active"> 👩‍🏫 Halaman Guru </button> <button id="student-tab" onclick="switchRole('student')" class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-inactive"> 👩‍🎓 Halaman Siswa </button>
+    </div>
+   </div><!-- Teacher Interface -->
+   <div id="teacher-interface" class="space-y-6"><!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+     <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="flex items-center">
+       <div class="bg-green-100 rounded-full p-3 mr-3">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+       <div>
+        <p class="text-sm text-gray-600">Selesai</p>
+        <p id="completed-projects" class="text-xl font-bold text-green-600">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="flex items-center">
+       <div class="bg-yellow-100 rounded-full p-3 mr-3">
+        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+       <div>
+        <p class="text-sm text-gray-600">Berlangsung</p>
+        <p id="ongoing-projects" class="text-xl font-bold text-yellow-600">0</p>
+       </div>
+      </div>
+     </div>
+     <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="flex items-center">
+       <div class="bg-blue-100 rounded-full p-3 mr-3">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+       </div>
+       <div>
+        <p class="text-sm text-gray-600">Menunggu Penilaian</p>
+        <p id="pending-assessment" class="text-xl font-bold text-blue-600">0</p>
+       </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-4">
+       <div class="flex items-center">
+        <div class="bg-purple-100 rounded-full p-3 mr-3">
+         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+         </svg>
+        </div>
+        <div>
+         <p class="text-sm text-gray-600">Total Siswa</p>
+         <p id="total-students" class="text-xl font-bold text-purple-600">0</p>
+        </div>
+       </div>
+      </div><!-- Create Project Form -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <h2 class="text-xl font-bold text-gray-800 mb-4">Buat Proyek P5 Baru</h2>
+       <form id="create-project-form" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div><label class="block text-sm font-medium text-gray-700 mb-1">Tema Proyek</label> <select id="tema" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required> <option value="">Pilih Tema</option> <option value="Gaya Hidup Berkelanjutan">Gaya Hidup Berkelanjutan</option> <option value="Kearifan Lokal">Kearifan Lokal</option> <option value="Bhinneka Tunggal Ika">Bhinneka Tunggal Ika</option> <option value="Bangunlah Jiwa dan Raganya">Bangunlah Jiwa dan Raganya</option> <option value="Suara Demokrasi">Suara Demokrasi</option> <option value="Rekayasa dan Teknologi">Rekayasa dan Teknologi</option> <option value="Kewirausahaan">Kewirausahaan</option> </select>
+         </div>
+         <div><label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label> <input type="text" id="kelas" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: X IPA 1" required>
+         </div>
+         <div><label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label> <input type="date" id="jadwal-mulai" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+         </div>
+         <div><label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label> <input type="date" id="jadwal-selesai" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+         </div>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Kompetensi yang Dikembangkan</label> <textarea id="kompetensi" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan kompetensi yang akan dikembangkan..." required></textarea>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Dimensi Profil Pelajar Pancasila</label>
+         <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2"><label class="flex items-center"> <input type="checkbox" value="Beriman, bertakwa kepada Tuhan YME, dan berakhlak mulia" class="mr-2 dimensi-checkbox"> <span class="text-sm">Beriman &amp; Berakhlak Mulia</span> </label> <label class="flex items-center"> <input type="checkbox" value="Berkebinekaan global" class="mr-2 dimensi-checkbox"> <span class="text-sm">Berkebinekaan Global</span> </label> <label class="flex items-center"> <input type="checkbox" value="Bergotong royong" class="mr-2 dimensi-checkbox"> <span class="text-sm">Bergotong Royong</span> </label> <label class="flex items-center"> <input type="checkbox" value="Mandiri" class="mr-2 dimensi-checkbox"> <span class="text-sm">Mandiri</span> </label> <label class="flex items-center"> <input type="checkbox" value="Bernalar kritis" class="mr-2 dimensi-checkbox"> <span class="text-sm">Bernalar Kritis</span> </label> <label class="flex items-center"> <input type="checkbox" value="Kreatif" class="mr-2 dimensi-checkbox"> <span class="text-sm">Kreatif</span> </label>
+         </div>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Proyek</label> <textarea id="deskripsi" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail proyek yang akan dikerjakan siswa..." required></textarea>
+        </div><button type="submit" id="create-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex items-center justify-center"> <span id="create-btn-text">Buat Proyek</span>
+         <div id="create-btn-spinner" class="loading-spinner ml-2 hidden"></div></button>
+       </form>
+      </div><!-- Projects Management -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <h2 class="text-xl font-bold text-gray-800 mb-4">Kelola Proyek</h2>
+       <div id="teacher-projects-container" class="space-y-4">
+        <div id="teacher-empty-state" class="text-center py-12">
+         <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg>
+         <p class="text-gray-500">Belum ada proyek yang dibuat</p>
+         <p class="text-sm text-gray-400 mt-1">Mulai dengan membuat proyek P5 pertama Anda</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- Student Interface -->
+     <div id="student-interface" class="space-y-6 hidden"><!-- Student ID Input -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Identitas Siswa</h2>
+        <div id="student-info" class="text-right hidden">
+         <p class="text-sm text-gray-600">Masuk sebagai:</p>
+         <p id="current-student-id" class="font-medium text-blue-600"></p>
+        </div>
+       </div>
+       <div id="student-login" class="flex gap-4"><input type="text" id="student-id-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan NIS atau ID Siswa"> <button onclick="loginStudent()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition duration-200"> Masuk </button>
+       </div>
+      </div><!-- Student Projects -->
+      <div id="student-projects-section" class="bg-white rounded-xl shadow-lg p-6 hidden">
+       <h2 class="text-xl font-bold text-gray-800 mb-4">Proyek Saya</h2>
+       <div id="student-projects-container" class="space-y-4">
+        <div id="student-empty-state" class="text-center py-12">
+         <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg>
+         <p class="text-gray-500">Belum ada proyek yang ditugaskan</p>
+         <p class="text-sm text-gray-400 mt-1">Tunggu guru memberikan proyek untuk Anda</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+    <script>
+        let currentData = [];
+        let currentRole = 'teacher';
+        let currentStudentId = null;
+        let isLoading = false;
+
+        const defaultConfig = {
+            school_name: "Nama Sekolah",
+            semester: "Semester 1 2024/2025"
+        };
+
+        const dataHandler = {
+            onDataChanged(data) {
+                currentData = data;
+                updateStatistics();
+                renderTeacherProjects();
+                renderStudentProjects();
+            }
+        };
+
+        async function initializeApp() {
+            try {
+                const result = await window.dataSdk.init(dataHandler);
+                if (!result.isOk) {
+                    console.error("Failed to initialize data SDK");
+                }
+            } catch (error) {
+                console.error("Error initializing app:", error);
+            }
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            
+            // Update tab appearance
+            const teacherTab = document.getElementById('teacher-tab');
+            const studentTab = document.getElementById('student-tab');
+            const teacherInterface = document.getElementById('teacher-interface');
+            const studentInterface = document.getElementById('student-interface');
+            
+            if (role === 'teacher') {
+                teacherTab.className = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-active';
+                studentTab.className = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-inactive';
+                teacherInterface.classList.remove('hidden');
+                studentInterface.classList.add('hidden');
+            } else {
+                teacherTab.className = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-inactive';
+                studentTab.className = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-active';
+                teacherInterface.classList.add('hidden');
+                studentInterface.classList.remove('hidden');
+            }
+        }
+
+        function loginStudent() {
+            const studentId = document.getElementById('student-id-input').value.trim();
+            if (!studentId) {
+                alert('Silakan masukkan NIS atau ID Siswa');
+                return;
+            }
+            
+            currentStudentId = studentId;
+            document.getElementById('current-student-id').textContent = studentId;
+            document.getElementById('student-login').classList.add('hidden');
+            document.getElementById('student-info').classList.remove('hidden');
+            document.getElementById('student-projects-section').classList.remove('hidden');
+            
+            renderStudentProjects();
+        }
+
+        function updateStatistics() {
+            const projects = currentData.filter(item => item.type === 'project');
+            const submissions = currentData.filter(item => item.type === 'submission');
+            
+            const total = projects.length;
+            const completed = submissions.filter(sub => sub.status === 'Dinilai').length;
+            const ongoing = projects.filter(proj => {
+                const now = new Date();
+                const start = new Date(proj.jadwal_mulai);
+                const end = new Date(proj.jadwal_selesai);
+                return now >= start && now <= end;
+            }).length;
+            const pendingAssessment = submissions.filter(sub => sub.status === 'Menunggu Penilaian').length;
+            const totalStudents = new Set(submissions.map(sub => sub.siswa_id)).size;
+
+            document.getElementById('total-projects').textContent = total;
+            document.getElementById('completed-projects').textContent = completed;
+            document.getElementById('ongoing-projects').textContent = ongoing;
+            document.getElementById('pending-assessment').textContent = pendingAssessment;
+            document.getElementById('total-students').textContent = totalStudents;
+        }
+
+        function renderTeacherProjects() {
+            const container = document.getElementById('teacher-projects-container');
+            const emptyState = document.getElementById('teacher-empty-state');
+            
+            const projects = currentData.filter(item => item.type === 'project');
+            
+            if (projects.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            const sortedProjects = [...projects].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            const existingCards = new Map();
+            container.querySelectorAll('.project-card').forEach(card => {
+                existingCards.set(card.dataset.projectId, card);
+            });
+
+            sortedProjects.forEach(project => {
+                if (existingCards.has(project.__backendId)) {
+                    updateTeacherProjectCard(existingCards.get(project.__backendId), project);
+                    existingCards.delete(project.__backendId);
+                } else {
+                    container.appendChild(createTeacherProjectCard(project));
+                }
+            });
+
+            existingCards.forEach(card => card.remove());
+        }
+
+        function createTeacherProjectCard(project) {
+            const card = document.createElement('div');
+            card.className = 'project-card bg-gray-50 rounded-lg p-6 border-l-4 border-blue-500 fade-in';
+            card.dataset.projectId = project.__backendId;
+            
+            updateTeacherProjectCard(card, project);
+            return card;
+        }
+
+        function updateTeacherProjectCard(card, project) {
+            const submissions = currentData.filter(item => 
+                item.type === 'submission' && 
+                item.tema === project.tema && 
+                item.kelas === project.kelas
+            );
+            
+            const submissionCount = submissions.length;
+            const gradedCount = submissions.filter(sub => sub.status === 'Dinilai').length;
+            
+            const startDate = new Date(project.jadwal_mulai).toLocaleDateString('id-ID');
+            const endDate = new Date(project.jadwal_selesai).toLocaleDateString('id-ID');
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${project.tema}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                            <p><strong>Kelas:</strong> ${project.kelas}</p>
+                            <p><strong>Periode:</strong> ${startDate} - ${endDate}</p>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Dimensi P5:</strong> ${project.dimensi_p5}</p>
+                        <p class="text-sm text-gray-700">${project.deskripsi}</p>
+                    </div>
+                    <div class="ml-4 text-right">
+                        <div class="bg-blue-100 rounded-lg p-3 mb-2">
+                            <p class="text-xs text-blue-600">Pengumpulan</p>
+                            <p class="text-lg font-bold text-blue-800">${submissionCount}</p>
+                        </div>
+                        <div class="bg-green-100 rounded-lg p-3">
+                            <p class="text-xs text-green-600">Dinilai</p>
+                            <p class="text-lg font-bold text-green-800">${gradedCount}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="assignToStudents('${project.__backendId}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                            📋 Tugaskan ke Siswa
+                        </button>
+                        <button onclick="viewSubmissions('${project.__backendId}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                            📝 Lihat Pengumpulan
+                        </button>
+                        <button onclick="deleteProject('${project.__backendId}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStudentProjects() {
+            if (!currentStudentId) return;
+            
+            const container = document.getElementById('student-projects-container');
+            const emptyState = document.getElementById('student-empty-state');
+            
+            const studentSubmissions = currentData.filter(item => 
+                item.type === 'submission' && 
+                item.siswa_id === currentStudentId
+            );
+            
+            if (studentSubmissions.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            const sortedSubmissions = [...studentSubmissions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            const existingCards = new Map();
+            container.querySelectorAll('.student-project-card').forEach(card => {
+                existingCards.set(card.dataset.submissionId, card);
+            });
+
+            sortedSubmissions.forEach(submission => {
+                if (existingCards.has(submission.__backendId)) {
+                    updateStudentProjectCard(existingCards.get(submission.__backendId), submission);
+                    existingCards.delete(submission.__backendId);
+                } else {
+                    container.appendChild(createStudentProjectCard(submission));
+                }
+            });
+
+            existingCards.forEach(card => card.remove());
+        }
+
+        function createStudentProjectCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'student-project-card bg-gray-50 rounded-lg p-6 border-l-4 fade-in';
+            card.dataset.submissionId = submission.__backendId;
+            
+            updateStudentProjectCard(card, submission);
+            return card;
+        }
+
+        function updateStudentProjectCard(card, submission) {
+            const statusColors = {
+                'Belum Dikumpulkan': 'border-gray-500',
+                'Dikumpulkan': 'border-yellow-500',
+                'Menunggu Penilaian': 'border-blue-500',
+                'Dinilai': 'border-green-500'
+            };
+            
+            const statusBadgeColors = {
+                'Belum Dikumpulkan': 'bg-gray-100 text-gray-800',
+                'Dikumpulkan': 'bg-yellow-100 text-yellow-800',
+                'Menunggu Penilaian': 'bg-blue-100 text-blue-800',
+                'Dinilai': 'bg-green-100 text-green-800'
+            };
+
+            card.className = `student-project-card bg-gray-50 rounded-lg p-6 border-l-4 ${statusColors[submission.status] || 'border-gray-500'} fade-in`;
+            
+            const endDate = new Date(submission.jadwal_selesai).toLocaleDateString('id-ID');
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h3 class="text-lg font-semibold text-gray-800">${submission.tema}</h3>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusBadgeColors[submission.status] || 'bg-gray-100 text-gray-800'}">${submission.status}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Kelas:</strong> ${submission.kelas}</p>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Deadline:</strong> ${endDate}</p>
+                        <p class="text-sm text-gray-700 mb-3">${submission.deskripsi}</p>
+                        
+                        ${submission.link_karya ? `
+                            <div class="bg-blue-50 p-3 rounded-lg mb-3">
+                                <p class="text-sm font-medium text-blue-800 mb-1">Link Karya:</p>
+                                <a href="${submission.link_karya}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm break-all">${submission.link_karya}</a>
+                            </div>
+                        ` : ''}
+                        
+                        ${submission.refleksi_siswa ? `
+                            <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                                <p class="text-sm font-medium text-gray-800 mb-1">Refleksi Saya:</p>
+                                <p class="text-sm text-gray-700">${submission.refleksi_siswa}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${submission.nilai && submission.umpan_balik ? `
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <p class="text-sm font-medium text-green-800 mb-1">Nilai: ${submission.nilai}</p>
+                                <p class="text-sm text-green-700">${submission.umpan_balik}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${submission.status !== 'Dinilai' ? `
+                    <div class="border-t pt-4">
+                        <button onclick="submitWork('${submission.__backendId}')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                            ${submission.link_karya ? '✏️ Edit Pengumpulan' : '📤 Kumpulkan Karya'}
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        async function assignToStudents(projectId) {
+            const project = currentData.find(p => p.__backendId === projectId);
+            if (!project) return;
+
+            const studentIds = prompt('Masukkan NIS siswa (pisahkan dengan koma):\nContoh: 12345, 12346, 12347');
+            if (!studentIds) return;
+
+            const ids = studentIds.split(',').map(id => id.trim()).filter(id => id);
+            if (ids.length === 0) return;
+
+            for (const studentId of ids) {
+                const submissionData = {
+                    id: `${project.id}_${studentId}_${Date.now()}`,
+                    type: 'submission',
+                    tema: project.tema,
+                    jadwal_mulai: project.jadwal_mulai,
+                    jadwal_selesai: project.jadwal_selesai,
+                    kompetensi: project.kompetensi,
+                    dimensi_p5: project.dimensi_p5,
+                    deskripsi: project.deskripsi,
+                    kelas: project.kelas,
+                    guru_id: 'teacher',
+                    siswa_id: studentId,
+                    link_karya: '',
+                    refleksi_siswa: '',
+                    nilai: '',
+                    umpan_balik: '',
+                    status: 'Belum Dikumpulkan',
+                    created_at: new Date().toISOString()
+                };
+
+                try {
+                    await window.dataSdk.create(submissionData);
+                } catch (error) {
+                    console.error('Error creating submission:', error);
+                }
+            }
+
+            alert(`Proyek berhasil ditugaskan ke ${ids.length} siswa`);
+        }
+
+        async function submitWork(submissionId) {
+            const submission = currentData.find(s => s.__backendId === submissionId);
+            if (!submission) return;
+
+            const linkKarya = prompt('Masukkan link karya Anda (Google Drive/YouTube/Canva):', submission.link_karya || '');
+            if (linkKarya === null) return;
+
+            const refleksi = prompt('Tuliskan refleksi Anda tentang proyek ini:', submission.refleksi_siswa || '');
+            if (refleksi === null) return;
+
+            const updatedSubmission = {
+                ...submission,
+                link_karya: linkKarya,
+                refleksi_siswa: refleksi,
+                status: linkKarya ? 'Menunggu Penilaian' : 'Belum Dikumpulkan'
+            };
+
+            try {
+                const result = await window.dataSdk.update(updatedSubmission);
+                if (result.isOk) {
+                    alert('Karya berhasil dikumpulkan!');
+                } else {
+                    alert('Gagal mengumpulkan karya. Silakan coba lagi.');
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            }
+        }
+
+        function viewSubmissions(projectId) {
+            const project = currentData.find(p => p.__backendId === projectId);
+            if (!project) return;
+
+            const submissions = currentData.filter(item => 
+                item.type === 'submission' && 
+                item.tema === project.tema && 
+                item.kelas === project.kelas
+            );
+
+            let submissionList = 'Daftar Pengumpulan:\n\n';
+            submissions.forEach((sub, index) => {
+                submissionList += `${index + 1}. Siswa: ${sub.siswa_id}\n`;
+                submissionList += `   Status: ${sub.status}\n`;
+                if (sub.link_karya) {
+                    submissionList += `   Link: ${sub.link_karya}\n`;
+                }
+                submissionList += '\n';
+            });
+
+            if (submissions.length === 0) {
+                submissionList = 'Belum ada siswa yang mengumpulkan karya.';
+            }
+
+            alert(submissionList);
+
+            // Grade submissions
+            const pendingSubmissions = submissions.filter(sub => sub.status === 'Menunggu Penilaian');
+            if (pendingSubmissions.length > 0) {
+                const gradeAll = confirm('Ada pengumpulan yang menunggu penilaian. Ingin memberikan nilai sekarang?');
+                if (gradeAll) {
+                    gradeSubmissions(pendingSubmissions);
+                }
+            }
+        }
+
+        async function gradeSubmissions(submissions) {
+            for (const submission of submissions) {
+                const nilai = prompt(`Berikan nilai untuk siswa ${submission.siswa_id} (0-100):`);
+                if (nilai === null) continue;
+
+                const umpanBalik = prompt(`Berikan umpan balik untuk siswa ${submission.siswa_id}:`);
+                if (umpanBalik === null) continue;
+
+                const updatedSubmission = {
+                    ...submission,
+                    nilai: nilai,
+                    umpan_balik: umpanBalik,
+                    status: 'Dinilai'
+                };
+
+                try {
+                    await window.dataSdk.update(updatedSubmission);
+                } catch (error) {
+                    console.error('Error updating submission:', error);
+                }
+            }
+
+            alert('Penilaian berhasil disimpan!');
+        }
+
+        async function deleteProject(projectId) {
+            const project = currentData.find(p => p.__backendId === projectId);
+            if (!project) return;
+
+            const confirmDelete = confirm(`Hapus proyek "${project.tema}"?\nSemua data pengumpulan siswa juga akan terhapus.`);
+            if (!confirmDelete) return;
+
+            try {
+                // Delete related submissions first
+                const relatedSubmissions = currentData.filter(item => 
+                    item.type === 'submission' && 
+                    item.tema === project.tema && 
+                    item.kelas === project.kelas
+                );
+
+                for (const submission of relatedSubmissions) {
+                    await window.dataSdk.delete(submission);
+                }
+
+                // Delete the project
+                const result = await window.dataSdk.delete(project);
+                if (result.isOk) {
+                    alert('Proyek berhasil dihapus!');
+                } else {
+                    alert('Gagal menghapus proyek. Silakan coba lagi.');
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            }
+        }
+
+        // Make functions global
+        window.switchRole = switchRole;
+        window.loginStudent = loginStudent;
+        window.assignToStudents = assignToStudents;
+        window.submitWork = submitWork;
+        window.viewSubmissions = viewSubmissions;
+        window.deleteProject = deleteProject;
+
+        document.getElementById('create-project-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (isLoading) return;
+            
+            if (currentData.length >= 999) {
+                alert("Maksimal 999 data telah tercapai. Silakan hapus beberapa data terlebih dahulu.");
+                return;
+            }
+
+            isLoading = true;
+            const createBtn = document.getElementById('create-btn');
+            const createBtnText = document.getElementById('create-btn-text');
+            const createBtnSpinner = document.getElementById('create-btn-spinner');
+            
+            createBtn.disabled = true;
+            createBtnText.textContent = 'Membuat Proyek...';
+            createBtnSpinner.classList.remove('hidden');
+
+            // Get selected dimensions
+            const selectedDimensions = Array.from(document.querySelectorAll('.dimensi-checkbox:checked'))
+                .map(cb => cb.value);
+
+            const projectData = {
+                id: Date.now().toString(),
+                type: 'project',
+                tema: document.getElementById('tema').value,
+                jadwal_mulai: document.getElementById('jadwal-mulai').value,
+                jadwal_selesai: document.getElementById('jadwal-selesai').value,
+                kompetensi: document.getElementById('kompetensi').value,
+                dimensi_p5: selectedDimensions.join(', '),
+                deskripsi: document.getElementById('deskripsi').value,
+                kelas: document.getElementById('kelas').value,
+                guru_id: 'teacher',
+                siswa_id: '',
+                link_karya: '',
+                refleksi_siswa: '',
+                nilai: '',
+                umpan_balik: '',
+                status: 'Aktif',
+                created_at: new Date().toISOString()
+            };
+
+            try {
+                const result = await window.dataSdk.create(projectData);
+                if (result.isOk) {
+                    this.reset();
+                    document.querySelectorAll('.dimensi-checkbox').forEach(cb => cb.checked = false);
+                    alert('Proyek berhasil dibuat!');
+                } else {
+                    alert('Gagal membuat proyek. Silakan coba lagi.');
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            } finally {
+                isLoading = false;
+                createBtn.disabled = false;
+                createBtnText.textContent = 'Buat Proyek';
+                createBtnSpinner.classList.add('hidden');
+            }
+        });
+
+        // Element SDK implementation
+        async function render(config) {
+            document.getElementById('school-name').textContent = config.school_name || defaultConfig.school_name;
+            document.getElementById('semester').textContent = config.semester || defaultConfig.semester;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["school_name", config.school_name || defaultConfig.school_name],
+                ["semester", config.semester || defaultConfig.semester]
+            ]);
+        }
+
+        // Initialize both SDKs
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeApp();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    render,
+                    mapToCapabilities,
+                    mapToEditPanelValues
+                });
+            }
+        });
+    </script>
+   </div>
+  </div>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ef211a854a81bf',t:'MTc2MDUyOTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
