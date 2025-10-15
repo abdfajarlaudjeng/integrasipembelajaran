@@ -400,8 +400,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="systemTitle">🎓 Sistem Pembelajaran Terintegrasi P5</h1>
-            <p id="schoolInfo">Informatika & Pendidikan Agama Islam - <span id="semesterInfo">Semester 1 - 2024/2025</span></p>
+            <h1 id="systemTitle">Sistem Pembelajaran Terintegrasi</h1>
+            <h1 id="systemTitle">SMPN 10 BANAWA SELATAN</h1>
+            <p id="schoolInfo">Informatika & Pendidikan Agama Islam - <span id="semesterInfo">Semester 1 - 2025/2026</span></p>
         </div>
         
         <div class="nav-tabs">
@@ -519,7 +520,7 @@
                         
                         <div class="form-group">
                             <label for="lkpdKelas">Kelas:</label>
-                            <textarea id="lkpdKelas" placeholder="Masukkan kelas Anda (contoh: VII, VIII, IX)" required style="min-height: 60px;"></textarea>
+                            <textarea id="lkpdKelas" placeholder="Masukkan kelas Anda (contoh: X-1, XI IPA 2, XII IPS 1)" required style="min-height: 60px;"></textarea>
                         </div>
                         
                         <div class="form-group">
@@ -563,7 +564,7 @@
                 <h2>📚 Materi Pembelajaran</h2>
                 <button class="btn btn-success" onclick="loadMateriData()">🔄 Muat Data Materi</button>
                 <div id="materiContainer">
-                    <div class="loading">Klik tombol "Muat Data Materi" untuk memuat materi dari Spreedsheets</div>
+                    <div class="loading">Klik tombol "Muat Data Materi" untuk memuat materi dari Google Sheets</div>
                 </div>
             </div>
             
@@ -571,7 +572,7 @@
                 <h2>🎯 Integrasi Pembelajaran</h2>
                 <button class="btn btn-success" onclick="loadIntegrasiData()">🔄 Muat Data Integrasi</button>
                 <div id="integrasiContainer">
-                    <div class="loading">Klik tombol "Muat Data Integrasi" untuk memuat data dari Spreedsheets</div>
+                    <div class="loading">Klik tombol "Muat Data Integrasi" untuk memuat data dari Google Sheets</div>
                 </div>
             </div>
         </div>
@@ -1045,6 +1046,9 @@
             }
 
             const tableHTML = `
+                <div class="alert alert-success" style="margin-bottom: 20px;">
+                    📊 Total LKPD Tersimpan: <strong>${lkpdRecords.length}</strong> data dalam Sheet LKPD_Siswa
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -1053,7 +1057,6 @@
                             <th>Nama</th>
                             <th>Kelas</th>
                             <th>Judul Proyek</th>
-                            <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -1065,7 +1068,6 @@
                                 <td>${record.nama}</td>
                                 <td>${record.kelas}</td>
                                 <td>${record.judul_proyek}</td>
-                                <td><span class="status-badge status-selesai">${record.status}</span></td>
                                 <td>
                                     <button class="btn btn-info" onclick="viewLKPDDetail('${record.__backendId}')">
                                         👁️ Lihat Detail
@@ -1246,5 +1248,5 @@
             }, 1000);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98eddb2ca299fd2a',t:'MTc2MDUxNTk5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98edf2abe3833f7b',t:'MTc2MDUxNjk1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
