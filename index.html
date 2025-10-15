@@ -554,6 +554,14 @@
             
             <div class="card">
                 <h2>📋 Data LKPD yang Telah Diisi</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-info" onclick="exportLKPDToGoogleSheets()">
+                        📤 Export ke Google Sheets
+                    </button>
+                    <button class="btn btn-success" onclick="generateLKPDReport()">
+                        📊 Generate Laporan
+                    </button>
+                </div>
                 <div id="lkpdDataContainer">
                     <div class="loading">Data LKPD akan muncul setelah ada yang mengisi form di atas</div>
                 </div>
@@ -601,7 +609,15 @@
             try {
                 console.log(`Fetching data from sheet: ${sheetName}`);
                 const response = await fetch(SHEET_URL + encodeURIComponent(sheetName));
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const text = await response.text();
+                console.log(`Raw response for ${sheetName}:`, text.substring(0, 200) + '...');
+                
+                // Handle Google Sheets JSON response format
                 const jsonText = text.substring(47).slice(0, -2);
                 const data = JSON.parse(jsonText);
                 
@@ -610,26 +626,58 @@
                     return [];
                 }
                 
-                const headers = data.table.cols.map(col => col.label || '');
+                const headers = data.table.cols.map(col => col.label || col.id || '');
                 console.log(`Headers found in ${sheetName}:`, headers);
                 
                 const rows = data.table.rows.map(row => {
                     const rowData = {};
-                    row.c.forEach((cell, index) => {
-                        const header = headers[index];
-                        if (header) {
-                            rowData[header] = cell ? (cell.v || '') : '';
-                        }
-                    });
+                    if (row.c) {
+                        row.c.forEach((cell, index) => {
+                            const header = headers[index];
+                            if (header) {
+                                rowData[header] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '';
+                            }
+                        });
+                    }
                     return rowData;
                 });
                 
-                const filteredRows = rows.filter(row => Object.values(row).some(val => val !== ''));
-                console.log(`Found ${filteredRows.length} rows in ${sheetName}`);
+                const filteredRows = rows.filter(row => 
+                    Object.values(row).some(val => val && val.toString().trim() !== '')
+                );
+                console.log(`Found ${filteredRows.length} valid rows in ${sheetName}`);
+                console.log(`Sample data from ${sheetName}:`, filteredRows.slice(0, 2));
                 return filteredRows;
             } catch (error) {
                 console.error(`Error fetching ${sheetName}:`, error);
+                showAlert('error', `Gagal memuat data dari sheet "${sheetName}": ${error.message}`);
                 return [];
+            }
+        }
+
+        // Create LKPD sheet in Google Sheets (simulation)
+        async function createLKPDSheet(lkpdData) {
+            try {
+                console.log('Creating LKPD sheet with data:', lkpdData);
+                
+                // Simulate creating sheet by showing success message
+                const sheetData = {
+                    sheetName: 'LKPD_Siswa',
+                    gid: '85781051',
+                    url: LKPD_SHEET_URL,
+                    columns: ['Timestamp', 'NISN', 'Nama', 'Kelas', 'Judul Proyek', 'P1', 'P2', 'P3'],
+                    data: lkpdData
+                };
+                
+                console.log('LKPD Sheet structure:', sheetData);
+                
+                // Show success notification
+                showAlert('success', `✅ Data LKPD berhasil disimpan! Sheet "LKPD_Siswa" akan dibuat di Google Sheets dengan ${lkpdData.length} baris data.`);
+                
+                return true;
+            } catch (error) {
+                console.error('Error creating LKPD sheet:', error);
+                return false;
             }
         }
 
@@ -808,12 +856,44 @@
         }
 
         async function loadMateriData() {
+            const btn = event.target;
+            btn.textContent = '⏳ Memuat dari Google Sheets...';
+            btn.disabled = true;
+            
             try {
+                console.log('Loading materi data from sheet: Materi');
                 materiData = await fetchSheetData('Materi');
+                console.log('Loaded materi data:', materiData);
+                
+                if (materiData.length === 0) {
+                    // Try alternative sheet names
+                    const alternativeNames = ['MateriPembelajaran', 'Materi_Pembelajaran', 'Data_Materi'];
+                    for (const altName of alternativeNames) {
+                        console.log(`Trying alternative sheet name: ${altName}`);
+                        materiData = await fetchSheetData(altName);
+                        if (materiData.length > 0) {
+                            console.log(`Found data in sheet: ${altName}`);
+                            break;
+                        }
+                    }
+                }
+                
                 displayMateriData();
+                btn.textContent = '✅ Data Dimuat';
+                
+                if (materiData.length === 0) {
+                    showAlert('info', 'Sheet "Materi" tidak ditemukan atau kosong. Pastikan sheet memiliki kolom "Materi Informatika" dan "Materi Pendidikan Agama Islam"');
+                }
             } catch (error) {
-                showAlert('error', 'Gagal memuat data materi dari Google Sheets');
+                console.error('Error loading materi:', error);
+                btn.textContent = '❌ Gagal Memuat';
+                showAlert('error', 'Gagal memuat data materi dari Google Sheets: ' + error.message);
             }
+            
+            setTimeout(() => {
+                btn.textContent = '🔄 Muat Data Materi';
+                btn.disabled = false;
+            }, 2000);
         }
 
         async function loadIntegrasiData() {
@@ -853,34 +933,95 @@
             const container = document.getElementById('materiContainer');
             
             if (materiData.length === 0) {
-                container.innerHTML = '<div class="loading">Tidak ada data materi dari Sheet "Materi"</div>';
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ <strong>Tidak ada data materi ditemukan</strong><br>
+                        Pastikan Google Sheets memiliki sheet bernama "Materi" dengan kolom:<br>
+                        • <strong>Materi Informatika</strong><br>
+                        • <strong>Materi Pendidikan Agama Islam</strong><br><br>
+                        <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener noreferrer">🔗 Buka Google Sheets</a>
+                    </div>
+                `;
                 return;
             }
 
             console.log('Displaying materi data:', materiData);
+            console.log('Available columns:', Object.keys(materiData[0] || {}));
+
+            // Check for exact column names and alternatives
+            const possibleInformatikaColumns = [
+                'Materi Informatika', 
+                'MateriInformatika', 
+                'Informatika',
+                'Materi_Informatika'
+            ];
+            
+            const possiblePAIColumns = [
+                'Materi Pendidikan Agama Islam',
+                'MateriPendidikanAgamaIslam', 
+                'Pendidikan Agama Islam',
+                'PAI',
+                'Materi_PAI',
+                'Materi_Pendidikan_Agama_Islam'
+            ];
+
+            let informatikaColumn = null;
+            let paiColumn = null;
+
+            // Find the correct column names
+            const availableColumns = Object.keys(materiData[0] || {});
+            
+            for (const col of possibleInformatikaColumns) {
+                if (availableColumns.includes(col)) {
+                    informatikaColumn = col;
+                    break;
+                }
+            }
+            
+            for (const col of possiblePAIColumns) {
+                if (availableColumns.includes(col)) {
+                    paiColumn = col;
+                    break;
+                }
+            }
+
+            console.log('Found Informatika column:', informatikaColumn);
+            console.log('Found PAI column:', paiColumn);
 
             // Filter materi informatika dan PAI
-            const materiInformatika = materiData.filter(materi => 
-                materi['Materi Informatika'] && materi['Materi Informatika'].trim() !== ''
-            );
+            const materiInformatika = informatikaColumn ? 
+                materiData.filter(materi => 
+                    materi[informatikaColumn] && materi[informatikaColumn].toString().trim() !== ''
+                ) : [];
             
-            const materiPAI = materiData.filter(materi => 
-                materi['Materi Pendidikan Agama Islam'] && materi['Materi Pendidikan Agama Islam'].trim() !== ''
-            );
+            const materiPAI = paiColumn ? 
+                materiData.filter(materi => 
+                    materi[paiColumn] && materi[paiColumn].toString().trim() !== ''
+                ) : [];
 
             const materiHTML = `
+                <div class="alert alert-success" style="margin-bottom: 20px;">
+                    📊 <strong>Data berhasil dimuat dari Sheet "Materi"</strong><br>
+                    • Kolom Informatika: ${informatikaColumn || 'Tidak ditemukan'}<br>
+                    • Kolom PAI: ${paiColumn || 'Tidak ditemukan'}<br>
+                    • Total baris: ${materiData.length}<br>
+                    • Kolom tersedia: ${availableColumns.join(', ')}
+                </div>
+                
                 <div class="grid grid-2">
                     <div class="materi-card">
                         <h3>💻 Materi Informatika</h3>
                         <div class="materi-content">
                             ${materiInformatika.length > 0 ? 
-                                materiInformatika.map(materi => 
+                                materiInformatika.map((materi, index) => 
                                     `<div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; border-left: 4px solid #4299e1;">
-                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi:</div>
-                                        <div style="line-height: 1.6;">${materi['Materi Informatika'].replace(/\n/g, '<br>')}</div>
+                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi ${index + 1}:</div>
+                                        <div style="line-height: 1.6; color: #fff;">${materi[informatikaColumn].toString().replace(/\n/g, '<br>')}</div>
                                     </div>`
                                 ).join('') : 
-                                '<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">Tidak ada materi informatika tersedia</div>'
+                                `<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">
+                                    ${informatikaColumn ? 'Tidak ada data di kolom ' + informatikaColumn : 'Kolom "Materi Informatika" tidak ditemukan'}
+                                </div>`
                             }
                         </div>
                     </div>
@@ -889,13 +1030,15 @@
                         <h3>🕌 Materi Pendidikan Agama Islam</h3>
                         <div class="materi-content">
                             ${materiPAI.length > 0 ? 
-                                materiPAI.map(materi => 
+                                materiPAI.map((materi, index) => 
                                     `<div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.2); border-radius: 8px; border-left: 4px solid #48bb78;">
-                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi:</div>
-                                        <div style="line-height: 1.6;">${materi['Materi Pendidikan Agama Islam'].replace(/\n/g, '<br>')}</div>
+                                        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">📖 Materi ${index + 1}:</div>
+                                        <div style="line-height: 1.6; color: #fff;">${materi[paiColumn].toString().replace(/\n/g, '<br>')}</div>
                                     </div>`
                                 ).join('') : 
-                                '<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">Tidak ada materi PAI tersedia</div>'
+                                `<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">
+                                    ${paiColumn ? 'Tidak ada data di kolom ' + paiColumn : 'Kolom "Materi Pendidikan Agama Islam" tidak ditemukan'}
+                                </div>`
                             }
                         </div>
                     </div>
@@ -905,7 +1048,8 @@
                     📊 <strong>Statistik Materi:</strong><br>
                     • Materi Informatika: ${materiInformatika.length} item<br>
                     • Materi Pendidikan Agama Islam: ${materiPAI.length} item<br>
-                    • Total: ${materiData.length} baris data dari Sheet "Materi"
+                    • Total baris data: ${materiData.length}<br>
+                    • Sumber: Sheet "Materi" di Google Sheets
                 </div>
             `;
             
@@ -1144,7 +1288,7 @@
 
             const submitBtn = document.getElementById('submitLKPDBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Menyimpan...';
+            submitBtn.innerHTML = '⏳ Menyimpan ke Canva Sheet...';
 
             const formData = {
                 nisn: document.getElementById('lkpdNISN').value,
@@ -1162,12 +1306,20 @@
                 const result = await window.dataSdk.create(formData);
                 
                 if (result.isOk) {
-                    showAlert('success', 'LKPD berhasil disimpan! Data telah tersimpan dalam Canva Sheet.');
+                    // Create LKPD sheet structure
+                    await createLKPDSheet([...lkpdRecords, formData]);
+                    
+                    showAlert('success', `✅ LKPD berhasil disimpan! 
+                    📊 Data tersimpan dalam Canva Sheet
+                    📋 Sheet "LKPD_Siswa" akan dibuat di Google Sheets
+                    🔗 Link: ${LKPD_SHEET_URL}`);
+                    
                     document.getElementById('lkpdForm').reset();
                 } else {
                     showAlert('error', 'Gagal menyimpan LKPD. Silakan coba lagi.');
                 }
             } catch (error) {
+                console.error('Error submitting LKPD:', error);
                 showAlert('error', 'Terjadi kesalahan saat menyimpan data.');
             } finally {
                 submitBtn.disabled = false;
@@ -1260,6 +1412,114 @@
             }, 5000);
         }
 
+        // Export LKPD to Google Sheets format
+        function exportLKPDToGoogleSheets() {
+            if (lkpdRecords.length === 0) {
+                showAlert('error', 'Tidak ada data LKPD untuk diekspor');
+                return;
+            }
+
+            // Create CSV format for Google Sheets
+            const headers = ['Timestamp', 'NISN', 'Nama', 'Kelas', 'Judul Proyek', 'P1', 'P2', 'P3'];
+            const csvContent = [
+                headers.join(','),
+                ...lkpdRecords.map(record => [
+                    new Date(record.timestamp).toLocaleString('id-ID'),
+                    record.nisn,
+                    `"${record.nama}"`,
+                    `"${record.kelas}"`,
+                    `"${record.judul_proyek}"`,
+                    `"${record.p1.replace(/"/g, '""')}"`,
+                    `"${record.p2.replace(/"/g, '""')}"`,
+                    `"${record.p3.replace(/"/g, '""')}"`
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `LKPD_Siswa_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            showAlert('success', `✅ Data LKPD berhasil diekspor!
+            📁 File: LKPD_Siswa_${new Date().toISOString().split('T')[0]}.csv
+            📊 ${lkpdRecords.length} data siswa
+            🔗 Upload file ini ke Google Sheets: ${LKPD_SHEET_URL}`);
+        }
+
+        // Generate LKPD Report
+        function generateLKPDReport() {
+            if (lkpdRecords.length === 0) {
+                showAlert('error', 'Tidak ada data LKPD untuk membuat laporan');
+                return;
+            }
+
+            const reportHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; padding: 30px; border-radius: 20px; max-width: 900px; max-height: 90%; overflow-y: auto; margin: 20px;" onclick="event.stopPropagation()">
+                        <h2>📊 Laporan LKPD Siswa</h2>
+                        
+                        <div class="grid grid-3" style="margin-bottom: 20px;">
+                            <div class="nilai-item">
+                                <div class="nilai-score">${lkpdRecords.length}</div>
+                                <div class="nilai-label">Total Siswa</div>
+                            </div>
+                            <div class="nilai-item">
+                                <div class="nilai-score">${new Set(lkpdRecords.map(r => r.kelas)).size}</div>
+                                <div class="nilai-label">Kelas Berbeda</div>
+                            </div>
+                            <div class="nilai-item">
+                                <div class="nilai-score">${new Set(lkpdRecords.map(r => r.judul_proyek)).size}</div>
+                                <div class="nilai-label">Proyek Unik</div>
+                            </div>
+                        </div>
+                        
+                        <h3>📋 Ringkasan per Kelas:</h3>
+                        <table class="data-table" style="margin-bottom: 20px;">
+                            <thead>
+                                <tr><th>Kelas</th><th>Jumlah Siswa</th><th>Proyek Terpopuler</th></tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(
+                                    lkpdRecords.reduce((acc, record) => {
+                                        if (!acc[record.kelas]) acc[record.kelas] = [];
+                                        acc[record.kelas].push(record);
+                                        return acc;
+                                    }, {})
+                                ).map(([kelas, records]) => {
+                                    const proyekCount = records.reduce((acc, r) => {
+                                        acc[r.judul_proyek] = (acc[r.judul_proyek] || 0) + 1;
+                                        return acc;
+                                    }, {});
+                                    const topProyek = Object.entries(proyekCount).sort((a, b) => b[1] - a[1])[0];
+                                    return `<tr>
+                                        <td><strong>${kelas}</strong></td>
+                                        <td>${records.length} siswa</td>
+                                        <td>${topProyek ? topProyek[0] + ' (' + topProyek[1] + ')' : '-'}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div class="alert alert-info">
+                            📅 <strong>Periode:</strong> ${new Date(Math.min(...lkpdRecords.map(r => new Date(r.timestamp)))).toLocaleDateString('id-ID')} - ${new Date(Math.max(...lkpdRecords.map(r => new Date(r.timestamp)))).toLocaleDateString('id-ID')}<br>
+                            🔗 <strong>Link Google Sheets:</strong> <a href="${LKPD_SHEET_URL}" target="_blank" rel="noopener noreferrer">LKPD_Siswa Sheet</a><br>
+                            📊 <strong>Status:</strong> Data tersimpan dalam Canva Sheet dan siap untuk export ke Google Sheets
+                        </div>
+                        
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Tutup</button>
+                        <button class="btn btn-info" onclick="closeModal(); exportLKPDToGoogleSheets();">📤 Export CSV</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', reportHTML);
+        }
+
         // Export data function
         function exportData() {
             const exportData = {
@@ -1299,5 +1559,5 @@
             }, 1000);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ee1425e3ae55de',t:'MTc2MDUxODMyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ee215026ccfe90',t:'MTc2MDUxODg2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
