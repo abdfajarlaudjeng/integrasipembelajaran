@@ -861,39 +861,134 @@
             btn.disabled = true;
             
             try {
-                console.log('Loading materi data from sheet: Materi');
-                materiData = await fetchSheetData('Materi');
-                console.log('Loaded materi data:', materiData);
+                console.log('🔍 Loading materi data from Google Sheets...');
                 
-                if (materiData.length === 0) {
-                    // Try alternative sheet names
-                    const alternativeNames = ['MateriPembelajaran', 'Materi_Pembelajaran', 'Data_Materi'];
-                    for (const altName of alternativeNames) {
-                        console.log(`Trying alternative sheet name: ${altName}`);
-                        materiData = await fetchSheetData(altName);
-                        if (materiData.length > 0) {
-                            console.log(`Found data in sheet: ${altName}`);
-                            break;
-                        }
+                // Try multiple sheet names that might contain material data
+                const possibleSheetNames = [
+                    'Materi', 
+                    'MateriPembelajaran', 
+                    'Materi_Pembelajaran', 
+                    'Data_Materi',
+                    'Sheet1',
+                    'Lembar1'
+                ];
+                
+                let foundData = false;
+                let foundSheetName = '';
+                
+                for (const sheetName of possibleSheetNames) {
+                    console.log(`🔍 Trying sheet: "${sheetName}"`);
+                    materiData = await fetchSheetData(sheetName);
+                    
+                    if (materiData.length > 0) {
+                        console.log(`✅ Found ${materiData.length} rows in sheet: "${sheetName}"`);
+                        console.log('📋 Available columns:', Object.keys(materiData[0] || {}));
+                        foundData = true;
+                        foundSheetName = sheetName;
+                        break;
                     }
                 }
                 
-                displayMateriData();
-                btn.textContent = '✅ Data Dimuat';
-                
-                if (materiData.length === 0) {
-                    showAlert('info', 'Sheet "Materi" tidak ditemukan atau kosong. Pastikan sheet memiliki kolom "Materi Informatika" dan "Materi Pendidikan Agama Islam"');
+                if (!foundData) {
+                    // If no data found, try to get sheet info
+                    console.log('❌ No data found in any sheet. Checking sheet structure...');
+                    const debugInfo = await getSheetDebugInfo();
+                    displayMateriError(debugInfo);
+                } else {
+                    displayMateriData(foundSheetName);
                 }
+                
+                btn.textContent = foundData ? '✅ Data Dimuat' : '❌ Tidak Ada Data';
+                
             } catch (error) {
-                console.error('Error loading materi:', error);
+                console.error('❌ Error loading materi:', error);
                 btn.textContent = '❌ Gagal Memuat';
-                showAlert('error', 'Gagal memuat data materi dari Google Sheets: ' + error.message);
+                displayMateriError({
+                    error: error.message,
+                    sheetId: SHEET_ID,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`
+                });
             }
             
             setTimeout(() => {
                 btn.textContent = '🔄 Muat Data Materi';
                 btn.disabled = false;
             }, 2000);
+        }
+
+        // Get debug information about the sheet
+        async function getSheetDebugInfo() {
+            try {
+                // Try to get basic sheet info
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+                const text = await response.text();
+                
+                return {
+                    sheetId: SHEET_ID,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`,
+                    responsePreview: text.substring(0, 200),
+                    accessible: response.ok
+                };
+            } catch (error) {
+                return {
+                    sheetId: SHEET_ID,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`,
+                    error: error.message,
+                    accessible: false
+                };
+            }
+        }
+
+        // Display error information for material data
+        function displayMateriError(debugInfo) {
+            const container = document.getElementById('materiContainer');
+            
+            container.innerHTML = `
+                <div class="alert alert-error">
+                    ❌ <strong>Tidak dapat memuat data materi</strong><br><br>
+                    
+                    <strong>🔍 Informasi Debug:</strong><br>
+                    • Sheet ID: ${debugInfo.sheetId}<br>
+                    • URL: <a href="${debugInfo.sheetUrl}" target="_blank" rel="noopener noreferrer">Buka Google Sheets</a><br>
+                    • Status: ${debugInfo.accessible ? 'Dapat diakses' : 'Tidak dapat diakses'}<br>
+                    ${debugInfo.error ? `• Error: ${debugInfo.error}<br>` : ''}
+                    <br>
+                    
+                    <strong>📋 Persyaratan Sheet "Materi":</strong><br>
+                    1. Sheet harus bernama "Materi" (atau "Sheet1")<br>
+                    2. Harus memiliki kolom dengan nama persis:<br>
+                    &nbsp;&nbsp;&nbsp;• <strong>"Materi Informatika"</strong><br>
+                    &nbsp;&nbsp;&nbsp;• <strong>"Materi Pendidikan Agama Islam"</strong><br>
+                    3. Sheet harus dapat diakses publik (Anyone with link can view)<br>
+                    4. Data harus ada di baris 2 dan seterusnya (baris 1 untuk header)<br><br>
+                    
+                    <strong>🔧 Cara Memperbaiki:</strong><br>
+                    1. Buka Google Sheets di link di atas<br>
+                    2. Pastikan ada sheet bernama "Materi"<br>
+                    3. Buat kolom dengan nama persis seperti di atas<br>
+                    4. Isi data materi di baris-baris berikutnya<br>
+                    5. Set sharing ke "Anyone with the link can view"<br>
+                    6. Klik tombol "🔄 Muat Data Materi" lagi
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>📝 Contoh Format Sheet:</strong><br>
+                    <table style="border: 1px solid #ccc; border-collapse: collapse; margin: 10px 0;">
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #ccc; padding: 8px;">Materi Informatika</th>
+                            <th style="border: 1px solid #ccc; padding: 8px;">Materi Pendidikan Agama Islam</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ccc; padding: 8px;">Algoritma dan Pemrograman</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">Akhlak dalam Teknologi</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ccc; padding: 8px;">Basis Data</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">Etika Digital Islam</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
         }
 
         async function loadIntegrasiData() {
@@ -929,31 +1024,30 @@
         }
 
         // Display functions
-        function displayMateriData() {
+        function displayMateriData(foundSheetName = 'Unknown') {
             const container = document.getElementById('materiContainer');
             
             if (materiData.length === 0) {
-                container.innerHTML = `
-                    <div class="alert alert-error">
-                        ❌ <strong>Tidak ada data materi ditemukan</strong><br>
-                        Pastikan Google Sheets memiliki sheet bernama "Materi" dengan kolom:<br>
-                        • <strong>Materi Informatika</strong><br>
-                        • <strong>Materi Pendidikan Agama Islam</strong><br><br>
-                        <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener noreferrer">🔗 Buka Google Sheets</a>
-                    </div>
-                `;
+                displayMateriError({
+                    sheetId: SHEET_ID,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`,
+                    error: 'No data found in any sheet'
+                });
                 return;
             }
 
-            console.log('Displaying materi data:', materiData);
-            console.log('Available columns:', Object.keys(materiData[0] || {}));
+            console.log('📊 Displaying materi data from sheet:', foundSheetName);
+            console.log('📋 Raw data sample:', materiData.slice(0, 2));
+            console.log('🔍 Available columns:', Object.keys(materiData[0] || {}));
 
             // Check for exact column names and alternatives
             const possibleInformatikaColumns = [
                 'Materi Informatika', 
                 'MateriInformatika', 
                 'Informatika',
-                'Materi_Informatika'
+                'Materi_Informatika',
+                'materi informatika',
+                'MATERI INFORMATIKA'
             ];
             
             const possiblePAIColumns = [
@@ -962,50 +1056,71 @@
                 'Pendidikan Agama Islam',
                 'PAI',
                 'Materi_PAI',
-                'Materi_Pendidikan_Agama_Islam'
+                'Materi_Pendidikan_Agama_Islam',
+                'materi pendidikan agama islam',
+                'MATERI PENDIDIKAN AGAMA ISLAM'
             ];
 
             let informatikaColumn = null;
             let paiColumn = null;
 
-            // Find the correct column names
+            // Find the correct column names (case-insensitive)
             const availableColumns = Object.keys(materiData[0] || {});
             
             for (const col of possibleInformatikaColumns) {
-                if (availableColumns.includes(col)) {
-                    informatikaColumn = col;
+                const foundCol = availableColumns.find(availCol => 
+                    availCol.toLowerCase().trim() === col.toLowerCase().trim()
+                );
+                if (foundCol) {
+                    informatikaColumn = foundCol;
                     break;
                 }
             }
             
             for (const col of possiblePAIColumns) {
-                if (availableColumns.includes(col)) {
-                    paiColumn = col;
+                const foundCol = availableColumns.find(availCol => 
+                    availCol.toLowerCase().trim() === col.toLowerCase().trim()
+                );
+                if (foundCol) {
+                    paiColumn = foundCol;
                     break;
                 }
             }
 
-            console.log('Found Informatika column:', informatikaColumn);
-            console.log('Found PAI column:', paiColumn);
+            console.log('✅ Found Informatika column:', informatikaColumn);
+            console.log('✅ Found PAI column:', paiColumn);
 
             // Filter materi informatika dan PAI
             const materiInformatika = informatikaColumn ? 
                 materiData.filter(materi => 
-                    materi[informatikaColumn] && materi[informatikaColumn].toString().trim() !== ''
+                    materi[informatikaColumn] && 
+                    materi[informatikaColumn].toString().trim() !== '' &&
+                    materi[informatikaColumn].toString().trim() !== 'null' &&
+                    materi[informatikaColumn].toString().trim() !== 'undefined'
                 ) : [];
             
             const materiPAI = paiColumn ? 
                 materiData.filter(materi => 
-                    materi[paiColumn] && materi[paiColumn].toString().trim() !== ''
+                    materi[paiColumn] && 
+                    materi[paiColumn].toString().trim() !== '' &&
+                    materi[paiColumn].toString().trim() !== 'null' &&
+                    materi[paiColumn].toString().trim() !== 'undefined'
                 ) : [];
+
+            console.log('📚 Filtered Informatika materials:', materiInformatika.length);
+            console.log('🕌 Filtered PAI materials:', materiPAI.length);
 
             const materiHTML = `
                 <div class="alert alert-success" style="margin-bottom: 20px;">
-                    📊 <strong>Data berhasil dimuat dari Sheet "Materi"</strong><br>
-                    • Kolom Informatika: ${informatikaColumn || 'Tidak ditemukan'}<br>
-                    • Kolom PAI: ${paiColumn || 'Tidak ditemukan'}<br>
+                    ✅ <strong>Data berhasil dimuat dari Sheet "${foundSheetName}"</strong><br>
+                    🔗 <strong>Google Sheets:</strong> <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener noreferrer">Buka Link</a><br>
+                    📊 <strong>Detail:</strong><br>
+                    • Kolom Informatika: ${informatikaColumn || '❌ Tidak ditemukan'}<br>
+                    • Kolom PAI: ${paiColumn || '❌ Tidak ditemukan'}<br>
                     • Total baris: ${materiData.length}<br>
-                    • Kolom tersedia: ${availableColumns.join(', ')}
+                    • Kolom tersedia: ${availableColumns.join(', ')}<br>
+                    • Materi Informatika valid: ${materiInformatika.length}<br>
+                    • Materi PAI valid: ${materiPAI.length}
                 </div>
                 
                 <div class="grid grid-2">
@@ -1020,7 +1135,10 @@
                                     </div>`
                                 ).join('') : 
                                 `<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">
-                                    ${informatikaColumn ? 'Tidak ada data di kolom ' + informatikaColumn : 'Kolom "Materi Informatika" tidak ditemukan'}
+                                    ${informatikaColumn ? 
+                                        `❌ Tidak ada data valid di kolom "${informatikaColumn}"<br>Pastikan kolom berisi teks materi yang tidak kosong` : 
+                                        '❌ Kolom "Materi Informatika" tidak ditemukan<br>Pastikan nama kolom persis: "Materi Informatika"'
+                                    }
                                 </div>`
                             }
                         </div>
@@ -1037,7 +1155,10 @@
                                     </div>`
                                 ).join('') : 
                                 `<div style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; color: rgba(255,255,255,0.7);">
-                                    ${paiColumn ? 'Tidak ada data di kolom ' + paiColumn : 'Kolom "Materi Pendidikan Agama Islam" tidak ditemukan'}
+                                    ${paiColumn ? 
+                                        `❌ Tidak ada data valid di kolom "${paiColumn}"<br>Pastikan kolom berisi teks materi yang tidak kosong` : 
+                                        '❌ Kolom "Materi Pendidikan Agama Islam" tidak ditemukan<br>Pastikan nama kolom persis: "Materi Pendidikan Agama Islam"'
+                                    }
                                 </div>`
                             }
                         </div>
@@ -1046,11 +1167,23 @@
                 
                 <div class="alert alert-info" style="margin-top: 20px;">
                     📊 <strong>Statistik Materi:</strong><br>
-                    • Materi Informatika: ${materiInformatika.length} item<br>
-                    • Materi Pendidikan Agama Islam: ${materiPAI.length} item<br>
+                    • Sheet ditemukan: "${foundSheetName}"<br>
+                    • Materi Informatika: ${materiInformatika.length} item valid<br>
+                    • Materi Pendidikan Agama Islam: ${materiPAI.length} item valid<br>
                     • Total baris data: ${materiData.length}<br>
-                    • Sumber: Sheet "Materi" di Google Sheets
+                    • Sumber: <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener noreferrer">Google Sheets</a>
                 </div>
+                
+                ${(materiInformatika.length === 0 && materiPAI.length === 0) ? `
+                    <div class="alert alert-error">
+                        ⚠️ <strong>Tidak ada materi yang dapat ditampilkan</strong><br>
+                        Kemungkinan penyebab:<br>
+                        1. Kolom "Materi Informatika" dan "Materi Pendidikan Agama Islam" tidak ditemukan<br>
+                        2. Kolom ada tapi tidak berisi data<br>
+                        3. Data berisi nilai kosong atau null<br><br>
+                        <strong>Solusi:</strong> Pastikan Google Sheets memiliki kolom dengan nama persis dan berisi data materi.
+                    </div>
+                ` : ''}
             `;
             
             container.innerHTML = materiHTML;
@@ -1559,5 +1692,5 @@
             }, 1000);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ee215026ccfe90',t:'MTc2MDUxODg2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ee2db802419af4',t:'MTc2MDUxOTM3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
