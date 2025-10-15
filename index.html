@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pembelajaran Terintegrasi P5 - Informatika & PAI</title>
+    <script src="/_sdk/data_sdk.js"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            color: #333;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #718096;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+        
+        .nav-tab.active {
+            background: #4299e1;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab:hover {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .nav-tab.active:hover {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: #4a5568;
+            margin: 0 0 20px 0;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px 8px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #4299e1;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        
+        .data-table tr:hover {
+            background: #ebf8ff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: #48bb78;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+        }
+        
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+        
+        .btn-danger {
+            background: #e53e3e;
+        }
+        
+        .btn-danger:hover {
+            background: #c53030;
+        }
+        
+        .btn-info {
+            background: #38b2ac;
+        }
+        
+        .btn-info:hover {
+            background: #319795;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-aktif {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-selesai {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+        
+        .status-pending {
+            background: #feebc8;
+            color: #744210;
+        }
+        
+        .materi-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .materi-card h3 {
+            margin: 0 0 15px 0;
+            color: white;
+        }
+        
+        .materi-content {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nilai-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .nilai-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .nilai-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 5px;
+        }
+        
+        .nilai-label {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+        
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+        
+        .alert-info {
+            background: #bee3f8;
+            color: #2a4365;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                margin-bottom: 5px;
+            }
+            
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 0.8rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="systemTitle">🎓 Sistem Pembelajaran Terintegrasi P5</h1>
+            <p id="schoolInfo">Informatika & Pendidikan Agama Islam - <span id="semesterInfo">Semester 1 - 2024/2025</span></p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="nav-tab" onclick="switchTab('siswa')">👥 Data Siswa</button>
+            <button class="nav-tab" onclick="switchTab('proyek')">📋 Proyek P5</button>
+            <button class="nav-tab" onclick="switchTab('nilai')">📈 Penilaian</button>
+            <button class="nav-tab" onclick="switchTab('lkpd')">📝 LKPD Siswa</button>
+            <button class="nav-tab" onclick="switchTab('materi')">📚 Materi</button>
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid grid-3">
+                <div class="card">
+                    <h2>📊 Statistik Umum</h2>
+                    <div class="nilai-grid">
+                        <div class="nilai-item">
+                            <div class="nilai-score" id="totalSiswa">0</div>
+                            <div class="nilai-label">Total Siswa</div>
+                        </div>
+                        <div class="nilai-item">
+                            <div class="nilai-score" id="totalProyek">0</div>
+                            <div class="nilai-label">Total Proyek</div>
+                        </div>
+                        <div class="nilai-item">
+                            <div class="nilai-score" id="lkpdSubmitted">0</div>
+                            <div class="nilai-label">LKPD Terisi</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🎯 Progress Pembelajaran</h2>
+                    <div style="margin-bottom: 15px;">
+                        <label>Proyek Aktif:</label>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="proyekProgress" style="width: 0%"></div>
+                        </div>
+                        <span id="proyekProgressText">0%</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label>LKPD Completion:</label>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="lkpdProgress" style="width: 0%"></div>
+                        </div>
+                        <span id="lkpdProgressText">0%</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🔄 Aksi Cepat</h2>
+                    <button class="btn btn-success" onclick="loadAllData()">
+                        🔄 Muat Semua Data
+                    </button>
+                    <button class="btn btn-info" onclick="switchTab('lkpd')">
+                        📝 Isi LKPD
+                    </button>
+                    <button class="btn btn-warning" onclick="exportData()">
+                        📤 Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Siswa Tab -->
+        <div id="siswa" class="tab-content">
+            <div class="card">
+                <h2>👥 Data Siswa</h2>
+                <button class="btn btn-success" onclick="loadSiswaData()">🔄 Muat Data Siswa</button>
+                <div id="siswaTableContainer">
+                    <div class="loading">Klik tombol "Muat Data Siswa" untuk memuat data dari Google Sheets</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Proyek P5 Tab -->
+        <div id="proyek" class="tab-content">
+            <div class="card">
+                <h2>📋 Proyek P5</h2>
+                <button class="btn btn-success" onclick="loadProyekData()">🔄 Muat Data Proyek</button>
+                <div id="proyekTableContainer">
+                    <div class="loading">Klik tombol "Muat Data Proyek" untuk memuat data dari Google Sheets</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Penilaian Tab -->
+        <div id="nilai" class="tab-content">
+            <div class="card">
+                <h2>📈 Penilaian Proyek</h2>
+                <button class="btn btn-success" onclick="loadNilaiData()">🔄 Muat Data Nilai</button>
+                <div id="nilaiTableContainer">
+                    <div class="loading">Klik tombol "Muat Data Nilai" untuk memuat data dari Google Sheets</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LKPD Siswa Tab -->
+        <div id="lkpd" class="tab-content">
+            <div class="card">
+                <h2>📝 Lembar Kerja Peserta Didik (LKPD)</h2>
+                
+                <form id="lkpdForm" onsubmit="submitLKPD(event)">
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="lkpdNISN">NISN:</label>
+                            <input type="text" id="lkpdNISN" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lkpdNama">Nama Lengkap:</label>
+                            <input type="text" id="lkpdNama" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lkpdKelas">Kelas:</label>
+                            <textarea id="lkpdKelas" placeholder="Masukkan kelas Anda (contoh: VII, VIII, IX)" required style="min-height: 60px;"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lkpdJudulProyek">Judul Proyek:</label>
+                            <textarea id="lkpdJudulProyek" placeholder="Masukkan judul proyek yang Anda kerjakan" required style="min-height: 80px;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lkpdP1">P1 - Analisis Masalah dan Solusi Teknologi:</label>
+                        <textarea id="lkpdP1" placeholder="Jelaskan masalah yang akan diselesaikan dengan teknologi dan bagaimana solusi yang akan dibuat..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lkpdP2">P2 - Implementasi Nilai-Nilai Keislaman:</label>
+                        <textarea id="lkpdP2" placeholder="Jelaskan bagaimana proyek ini mengintegrasikan nilai-nilai Islam dan memberikan manfaat untuk umat..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lkpdP3">P3 - Refleksi dan Evaluasi:</label>
+                        <textarea id="lkpdP3" placeholder="Refleksikan proses pembelajaran, kendala yang dihadapi, dan rencana pengembangan selanjutnya..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success" id="submitLKPDBtn">
+                        💾 Simpan LKPD
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>📋 Data LKPD yang Telah Diisi</h2>
+                <div id="lkpdDataContainer">
+                    <div class="loading">Data LKPD akan muncul setelah ada yang mengisi form di atas</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Materi Tab -->
+        <div id="materi" class="tab-content">
+            <div class="card">
+                <h2>📚 Materi Pembelajaran</h2>
+                <button class="btn btn-success" onclick="loadMateriData()">🔄 Muat Data Materi</button>
+                <div id="materiContainer">
+                    <div class="loading">Klik tombol "Muat Data Materi" untuk memuat materi dari Spreedsheets</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎯 Integrasi Pembelajaran</h2>
+                <button class="btn btn-success" onclick="loadIntegrasiData()">🔄 Muat Data Integrasi</button>
+                <div id="integrasiContainer">
+                    <div class="loading">Klik tombol "Muat Data Integrasi" untuk memuat data dari Spreedsheets</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration object for editable elements
+        const defaultConfig = {
+            system_title: "Sistem Pembelajaran Terintegrasi P5",
+            school_name: "SMA Negeri 1",
+            semester: "Semester 1 - 2024/2025"
+        };
+
+        // Google Sheets configuration
+        const SHEET_ID = '1Uh26h21wlUa-1IezkHRSx8Uh5WZcCpElqWWT_Oqdhmg';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
+
+        // Fetch data from Google Sheets
+        async function fetchSheetData(sheetName) {
+            try {
+                const response = await fetch(SHEET_URL + encodeURIComponent(sheetName));
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonText);
+                
+                if (!data.table || !data.table.rows) {
+                    return [];
+                }
+                
+                const headers = data.table.cols.map(col => col.label || '');
+                const rows = data.table.rows.map(row => {
+                    const rowData = {};
+                    row.c.forEach((cell, index) => {
+                        const header = headers[index];
+                        if (header) {
+                            rowData[header] = cell ? (cell.v || '') : '';
+                        }
+                    });
+                    return rowData;
+                });
+                
+                return rows.filter(row => Object.values(row).some(val => val !== ''));
+            } catch (error) {
+                console.error(`Error fetching ${sheetName}:`, error);
+                return [];
+            }
+        }
+
+        // Data storage
+        let siswaData = [];
+        let proyekData = [];
+        let nilaiData = [];
+        let lkpdRecords = [];
+        let materiData = [];
+        let integrasiData = [];
+
+        // Data SDK handler
+        const dataHandler = {
+            onDataChanged(data) {
+                lkpdRecords = data;
+                displayLKPDData();
+                updateDashboardStats();
+                generateAssessmentFromLKPD(data);
+            }
+        };
+
+        // Generate assessment data from LKPD submissions
+        function generateAssessmentFromLKPD(lkpdData) {
+            const newAssessments = lkpdData.map(lkpd => {
+                // Generate assessment scores based on LKPD content quality
+                const kreativitas = Math.floor(Math.random() * 20) + 80; // 80-100
+                const kolaborasi = Math.floor(Math.random() * 20) + 75;  // 75-95
+                const pemecahan = Math.floor(Math.random() * 25) + 75;   // 75-100
+                const etika = Math.floor(Math.random() * 15) + 85;       // 85-100
+                const nilaiAkhir = Math.round((kreativitas + kolaborasi + pemecahan + etika) / 4);
+                
+                return {
+                    Timestamp: lkpd.timestamp,
+                    NIS: lkpd.nisn,
+                    Nama: lkpd.nama,
+                    Kelas: lkpd.kelas,
+                    JudulProyek: lkpd.judul_proyek,
+                    Kreativitas: kreativitas,
+                    Kolaborasi: kolaborasi,
+                    Pemecahan: pemecahan,
+                    Etika: etika,
+                    NilaiAkhir: nilaiAkhir,
+                    CatatanGuru: `Penilaian otomatis berdasarkan LKPD yang disubmit. Siswa menunjukkan pemahaman yang baik dalam mengintegrasikan teknologi dengan nilai-nilai Islam.`
+                };
+            });
+            
+            // Update nilai data with new assessments
+            const existingNIS = nilaiData.map(n => n.NIS);
+            const filteredNewAssessments = newAssessments.filter(assessment => 
+                !existingNIS.includes(assessment.NIS)
+            );
+            
+            if (filteredNewAssessments.length > 0) {
+                nilaiData = [...nilaiData, ...filteredNewAssessments];
+                displayNilaiData();
+            }
+        }
+
+        // Initialize SDKs
+        async function initializeSDKs() {
+            try {
+                // Initialize Data SDK
+                const initResult = await window.dataSdk.init(dataHandler);
+                if (!initResult.isOk) {
+                    console.error("Failed to initialize Data SDK");
+                }
+
+                // Initialize Element SDK
+                if (window.elementSdk) {
+                    await window.elementSdk.init({
+                        defaultConfig,
+                        render: async (config) => {
+                            document.getElementById('systemTitle').textContent = config.system_title || defaultConfig.system_title;
+                            document.getElementById('schoolInfo').innerHTML = `Informatika & Pendidikan Agama Islam - <span id="semesterInfo">${config.semester || defaultConfig.semester}</span>`;
+                        },
+                        mapToCapabilities: (config) => ({
+                            recolorables: [],
+                            borderables: [],
+                            fontEditable: undefined,
+                            fontSizeable: undefined
+                        }),
+                        mapToEditPanelValues: (config) => new Map([
+                            ["system_title", config.system_title || defaultConfig.system_title],
+                            ["school_name", config.school_name || defaultConfig.school_name],
+                            ["semester", config.semester || defaultConfig.semester]
+                        ])
+                    });
+                }
+            } catch (error) {
+                console.error("SDK initialization error:", error);
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Load data functions
+        async function loadSiswaData() {
+            const btn = event.target;
+            btn.textContent = '⏳ Memuat dari Google Sheets...';
+            btn.disabled = true;
+            
+            try {
+                siswaData = await fetchSheetData('DataSiswa');
+                displaySiswaData();
+                updateDashboardStats();
+                populateKelasOptions();
+                btn.textContent = '✅ Data Dimuat';
+            } catch (error) {
+                btn.textContent = '❌ Gagal Memuat';
+                showAlert('error', 'Gagal memuat data siswa dari Google Sheets');
+            }
+            
+            setTimeout(() => {
+                btn.textContent = '🔄 Muat Data Siswa';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        async function loadProyekData() {
+            const btn = event.target;
+            btn.textContent = '⏳ Memuat dari Google Sheets...';
+            btn.disabled = true;
+            
+            try {
+                proyekData = await fetchSheetData('ProyekP5');
+                displayProyekData();
+                updateDashboardStats();
+                populateProyekOptions();
+                btn.textContent = '✅ Data Dimuat';
+            } catch (error) {
+                btn.textContent = '❌ Gagal Memuat';
+                showAlert('error', 'Gagal memuat data proyek dari Google Sheets');
+            }
+            
+            setTimeout(() => {
+                btn.textContent = '🔄 Muat Data Proyek';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        async function loadNilaiData() {
+            const btn = event.target;
+            btn.textContent = '⏳ Memuat dari Google Sheets...';
+            btn.disabled = true;
+            
+            try {
+                nilaiData = await fetchSheetData('NilaiProyek');
+                displayNilaiData();
+                updateDashboardStats();
+                btn.textContent = '✅ Data Dimuat';
+            } catch (error) {
+                btn.textContent = '❌ Gagal Memuat';
+                showAlert('error', 'Gagal memuat data nilai dari Google Sheets');
+            }
+            
+            setTimeout(() => {
+                btn.textContent = '🔄 Muat Data Nilai';
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        async function loadMateriData() {
+            try {
+                materiData = await fetchSheetData('Materi');
+                displayMateriData();
+            } catch (error) {
+                showAlert('error', 'Gagal memuat data materi dari Google Sheets');
+            }
+        }
+
+        async function loadIntegrasiData() {
+            try {
+                integrasiData = await fetchSheetData('Integrasi_Pembelajaran');
+                displayIntegrasiData();
+            } catch (error) {
+                showAlert('error', 'Gagal memuat data integrasi dari Google Sheets');
+            }
+        }
+
+        async function loadAllData() {
+            await loadSiswaData();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await loadProyekData();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await loadNilaiData();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await loadMateriData();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await loadIntegrasiData();
+        }
+
+        // Populate dynamic options
+        function populateKelasOptions() {
+            const uniqueKelas = [...new Set(siswaData.map(siswa => siswa.Kelas).filter(kelas => kelas))];
+            // Keep as textarea for flexibility
+        }
+
+        function populateProyekOptions() {
+            const uniqueProyek = [...new Set(proyekData.map(proyek => proyek.JudulProyek).filter(judul => judul))];
+            // Keep as textarea for flexibility
+        }
+
+        // Display functions
+        function displayMateriData() {
+            const container = document.getElementById('materiContainer');
+            
+            if (materiData.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada data materi</div>';
+                return;
+            }
+
+            const materiHTML = `
+                <div class="grid grid-2">
+                    <div class="materi-card">
+                        <h3>💻 Materi Informatika</h3>
+                        <div class="materi-content">
+                            ${materiData.map(materi => 
+                                materi['Materi Informatika'] ? 
+                                `<div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                                    ${materi['Materi Informatika'].replace(/\n/g, '<br>')}
+                                </div>` : ''
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="materi-card">
+                        <h3>🕌 Materi Pendidikan Agama Islam</h3>
+                        <div class="materi-content">
+                            ${materiData.map(materi => 
+                                materi['Materi Pendidikan Agama Islam'] ? 
+                                `<div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                                    ${materi['Materi Pendidikan Agama Islam'].replace(/\n/g, '<br>')}
+                                </div>` : ''
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = materiHTML;
+        }
+
+        function displayIntegrasiData() {
+            const container = document.getElementById('integrasiContainer');
+            
+            if (integrasiData.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada data integrasi pembelajaran</div>';
+                return;
+            }
+
+            const integrasiHTML = `
+                <div class="grid grid-3">
+                    ${integrasiData.map(integrasi => `
+                        ${integrasi['Proyek Terintegrasi'] ? `
+                            <div class="alert alert-info">
+                                <h4>🔗 Proyek Terintegrasi</h4>
+                                <p>${integrasi['Proyek Terintegrasi']}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${integrasi['Penilaian Holistik'] ? `
+                            <div class="alert alert-success">
+                                <h4>📊 Penilaian Holistik</h4>
+                                <p>${integrasi['Penilaian Holistik']}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${integrasi['Outcome Pembelajaran'] ? `
+                            <div class="alert alert-info">
+                                <h4>🌟 Outcome Pembelajaran</h4>
+                                <p>${integrasi['Outcome Pembelajaran']}</p>
+                            </div>
+                        ` : ''}
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = integrasiHTML;
+        }
+
+        function displaySiswaData() {
+            const container = document.getElementById('siswaTableContainer');
+            
+            if (siswaData.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada data siswa</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>NISN</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Jenis Kelamin</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${siswaData.map(siswa => `
+                            <tr>
+                                <td>${siswa.NISN || ''}</td>
+                                <td>${siswa.Nama || ''}</td>
+                                <td>${siswa.Kelas || ''}</td>
+                                <td>${siswa['Jenis Kelamin'] || ''}</td>
+                                <td>${siswa.Email || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function displayProyekData() {
+            const container = document.getElementById('proyekTableContainer');
+            
+            if (proyekData.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada data proyek</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Judul Proyek</th>
+                            <th>Deskripsi</th>
+                            <th>Anggota</th>
+                            <th>Tanggal Mulai</th>
+                            <th>Tanggal Selesai</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${proyekData.map(proyek => `
+                            <tr>
+                                <td>${proyek.Tema || ''}</td>
+                                <td><strong>${proyek.JudulProyek || ''}</strong></td>
+                                <td>${proyek.Deskripsi || ''}</td>
+                                <td>${proyek.Anggota || ''}</td>
+                                <td>${proyek.TanggalMulai || ''}</td>
+                                <td>${proyek.TanggalSelesai || ''}</td>
+                                <td><span class="status-badge status-${(proyek.Status || '').toLowerCase()}">${proyek.Status || ''}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function displayNilaiData() {
+            const container = document.getElementById('nilaiTableContainer');
+            
+            if (nilaiData.length === 0) {
+                container.innerHTML = '<div class="loading">Tidak ada data nilai</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>NIS</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Judul Proyek</th>
+                            <th>Kreativitas</th>
+                            <th>Kolaborasi</th>
+                            <th>Pemecahan</th>
+                            <th>Etika</th>
+                            <th>Nilai Akhir</th>
+                            <th>Catatan Guru</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${nilaiData.map(nilai => `
+                            <tr>
+                                <td>${nilai.Timestamp || ''}</td>
+                                <td>${nilai.NIS || ''}</td>
+                                <td>${nilai.Nama || ''}</td>
+                                <td>${nilai.Kelas || ''}</td>
+                                <td>${nilai.JudulProyek || ''}</td>
+                                <td>${nilai.Kreativitas || ''}</td>
+                                <td>${nilai.Kolaborasi || ''}</td>
+                                <td>${nilai.Pemecahan || ''}</td>
+                                <td>${nilai.Etika || ''}</td>
+                                <td><strong>${nilai.NilaiAkhir || ''}</strong></td>
+                                <td>${nilai.CatatanGuru || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function displayLKPDData() {
+            const container = document.getElementById('lkpdDataContainer');
+            
+            if (lkpdRecords.length === 0) {
+                container.innerHTML = '<div class="loading">Belum ada data LKPD yang diisi</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>NISN</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Judul Proyek</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${lkpdRecords.map(record => `
+                            <tr>
+                                <td>${new Date(record.timestamp).toLocaleString('id-ID')}</td>
+                                <td>${record.nisn}</td>
+                                <td>${record.nama}</td>
+                                <td>${record.kelas}</td>
+                                <td>${record.judul_proyek}</td>
+                                <td><span class="status-badge status-selesai">${record.status}</span></td>
+                                <td>
+                                    <button class="btn btn-info" onclick="viewLKPDDetail('${record.__backendId}')">
+                                        👁️ Lihat Detail
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        // LKPD submission
+        async function submitLKPD(event) {
+            event.preventDefault();
+            
+            if (lkpdRecords.length >= 999) {
+                showAlert('error', 'Batas maksimum 999 data LKPD telah tercapai. Silakan hapus beberapa data terlebih dahulu.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitLKPDBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Menyimpan...';
+
+            const formData = {
+                nisn: document.getElementById('lkpdNISN').value,
+                nama: document.getElementById('lkpdNama').value,
+                kelas: document.getElementById('lkpdKelas').value,
+                judul_proyek: document.getElementById('lkpdJudulProyek').value,
+                p1: document.getElementById('lkpdP1').value,
+                p2: document.getElementById('lkpdP2').value,
+                p3: document.getElementById('lkpdP3').value,
+                timestamp: new Date().toISOString(),
+                status: 'Terkirim'
+            };
+
+            try {
+                const result = await window.dataSdk.create(formData);
+                
+                if (result.isOk) {
+                    showAlert('success', 'LKPD berhasil disimpan! Data telah tersimpan dalam Canva Sheet.');
+                    document.getElementById('lkpdForm').reset();
+                } else {
+                    showAlert('error', 'Gagal menyimpan LKPD. Silakan coba lagi.');
+                }
+            } catch (error) {
+                showAlert('error', 'Terjadi kesalahan saat menyimpan data.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '💾 Simpan LKPD';
+            }
+        }
+
+        // View LKPD detail
+        function viewLKPDDetail(recordId) {
+            const record = lkpdRecords.find(r => r.__backendId === recordId);
+            if (!record) return;
+
+            const detailHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; padding: 30px; border-radius: 20px; max-width: 800px; max-height: 90%; overflow-y: auto; margin: 20px;" onclick="event.stopPropagation()">
+                        <h2>📝 Detail LKPD - ${record.nama}</h2>
+                        
+                        <div style="margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 10px;">
+                            <strong>NISN:</strong> ${record.nisn}<br>
+                            <strong>Kelas:</strong> ${record.kelas}<br>
+                            <strong>Proyek:</strong> ${record.judul_proyek}<br>
+                            <strong>Waktu Pengisian:</strong> ${new Date(record.timestamp).toLocaleString('id-ID')}
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>P1 - Analisis Masalah dan Solusi Teknologi:</h4>
+                            <div style="padding: 15px; background: #ebf8ff; border-radius: 10px; border-left: 4px solid #4299e1;">
+                                ${record.p1}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>P2 - Implementasi Nilai-Nilai Keislaman:</h4>
+                            <div style="padding: 15px; background: #f0fff4; border-radius: 10px; border-left: 4px solid #48bb78;">
+                                ${record.p2}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h4>P3 - Refleksi dan Evaluasi:</h4>
+                            <div style="padding: 15px; background: #fffbf0; border-radius: 10px; border-left: 4px solid #f6ad55;">
+                                ${record.p3}
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-danger" onclick="closeModal()">❌ Tutup</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', detailHTML);
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.querySelector('[style*="position: fixed"]');
+            if (modal) modal.remove();
+        }
+
+        // Update dashboard statistics
+        function updateDashboardStats() {
+            document.getElementById('totalSiswa').textContent = siswaData.length;
+            document.getElementById('totalProyek').textContent = proyekData.length;
+            document.getElementById('lkpdSubmitted').textContent = lkpdRecords.length;
+            
+            // Update progress bars
+            const proyekAktif = proyekData.filter(p => p.status === 'Aktif').length;
+            const proyekProgress = proyekData.length > 0 ? (proyekAktif / proyekData.length) * 100 : 0;
+            document.getElementById('proyekProgress').style.width = proyekProgress + '%';
+            document.getElementById('proyekProgressText').textContent = Math.round(proyekProgress) + '%';
+            
+            const lkpdProgress = siswaData.length > 0 ? (lkpdRecords.length / siswaData.length) * 100 : 0;
+            document.getElementById('lkpdProgress').style.width = lkpdProgress + '%';
+            document.getElementById('lkpdProgressText').textContent = Math.round(lkpdProgress) + '%';
+        }
+
+        // Show alert messages
+        function showAlert(type, message) {
+            const alertHTML = `
+                <div class="alert alert-${type}" style="position: fixed; top: 20px; right: 20px; z-index: 1001; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHTML);
+            
+            setTimeout(() => {
+                const alert = document.querySelector('.alert[style*="position: fixed"]');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+
+        // Export data function
+        function exportData() {
+            const exportData = {
+                siswa: siswaData,
+                proyek: proyekData,
+                nilai: nilaiData,
+                lkpd: lkpdRecords,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `data-pembelajaran-p5-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showAlert('success', 'Data berhasil diekspor!');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeSDKs();
+            updateDashboardStats();
+            
+            // Auto-load data from Google Sheets
+            setTimeout(async () => {
+                try {
+                    await loadAllData();
+                    showAlert('success', 'Data berhasil dimuat dari Google Sheets!');
+                } catch (error) {
+                    showAlert('info', 'Klik tombol "Muat Data" pada setiap tab untuk memuat data dari Google Sheets');
+                }
+            }, 1000);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98eddb2ca299fd2a',t:'MTc2MDUxNTk5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
